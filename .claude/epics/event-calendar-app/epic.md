@@ -4,7 +4,7 @@ status: backlog
 created: 2025-09-21T14:44:30Z
 progress: 0%
 prd: .claude/prds/event-calendar-app.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/redbear4013/engaged-app-ccpm/issues/1
 ---
 
 # Epic: event-calendar-app
@@ -81,16 +81,16 @@ High-level task categories that will be created:
 - **Code Quality**: >90% test coverage, TypeScript strict mode, automated linting
 
 ## Tasks Created
-- [ ] 001.md - Database Schema & Supabase Setup (parallel: true)
-- [ ] 002.md - Project Setup & Architecture (parallel: true)
-- [ ] 003.md - User Authentication & Profiles (parallel: false)
-- [ ] 004.md - Event Scraping Pipeline (parallel: true)
-- [ ] 005.md - Discover Landing Page (parallel: true)
-- [ ] 006.md - Calendar Integration (parallel: false)
-- [ ] 007.md - AI Matching Interface (parallel: true)
-- [ ] 008.md - Pro Membership System (parallel: true)
-- [ ] 009.md - Organizer Portal (parallel: true)
-- [ ] 010.md - Performance Optimization & Deployment (parallel: false)
+- [ ] #2 - Database Schema & Supabase Setup (parallel: true)
+- [ ] #3 - Project Setup & Architecture (parallel: true)
+- [ ] #4 - User Authentication & Profiles (parallel: false)
+- [ ] #5 - Event Scraping Pipeline (parallel: true)
+- [ ] #6 - Discover Landing Page (parallel: true)
+- [ ] #7 - Calendar Integration (parallel: false)
+- [ ] #8 - AI Matching Interface (parallel: true)
+- [ ] #9 - Pro Membership System (parallel: true)
+- [ ] #10 - Organizer Portal (parallel: true)
+- [ ] #11 - Performance Optimization & Deployment (parallel: false)
 
 Total tasks: 10
 Parallel tasks: 7
