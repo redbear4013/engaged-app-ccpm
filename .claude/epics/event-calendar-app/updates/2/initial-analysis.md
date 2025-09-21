@@ -5,6 +5,7 @@
 Based on the epic and PRD review, the database needs to support:
 
 ### Core Entities
+
 1. **Users** - Authentication and profiles with AI matching preferences
 2. **Events** - Core event data with rich metadata for AI matching
 3. **Event Categories** - Classification system for events
@@ -15,6 +16,7 @@ Based on the epic and PRD review, the database needs to support:
 8. **Event Sources** - For scraping pipeline tracking
 
 ### Key Requirements
+
 - Support 50k events and 20k users
 - AI matching data structure for user preferences
 - Event scraping pipeline data models
@@ -24,6 +26,7 @@ Based on the epic and PRD review, the database needs to support:
 - Real-time subscriptions for live updates
 
 ### Technical Approach
+
 1. Create comprehensive schema with proper relationships
 2. Implement RLS policies for security
 3. Add indexes for performance (date fields, foreign keys)
@@ -32,6 +35,7 @@ Based on the epic and PRD review, the database needs to support:
 6. Include seed data for testing
 
 ## Implementation Plan
+
 1. Core tables schema (users, events, categories, venues)
 2. Interaction tables (swipes, saves, attendance)
 3. Membership and billing tables
@@ -43,6 +47,7 @@ Based on the epic and PRD review, the database needs to support:
 9. Initial seed data
 
 ## Progress Status
+
 - [x] Requirements analysis complete
 - [ ] Core schema implementation
 - [ ] RLS policies

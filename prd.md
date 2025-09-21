@@ -16,21 +16,21 @@ To be the **go-to calendar-first event discovery app** in Macau/HK/GBA, offering
 
 ## Problem Statement
 
-* **Fragmented discovery**: Events are scattered across multiple sites and apps.
-* **Generic recommendations**: Users get lists, not personalized matches.
-* **Weak calendar integration**: Most event apps treat calendars as secondary.
-* **Organizer friction**: No simple way to submit, update, and promote events.
+- **Fragmented discovery**: Events are scattered across multiple sites and apps.
+- **Generic recommendations**: Users get lists, not personalized matches.
+- **Weak calendar integration**: Most event apps treat calendars as secondary.
+- **Organizer friction**: No simple way to submit, update, and promote events.
 
 ---
 
 ## Our Solution
 
-* **Timable-style Discover page**: Trending, Nearby, Top 10 events.
-* **AI Matching (Swipe)**: Tinder-like interface to like/pass events, training the app to personalize recommendations.
-* **Calendar-first UX**: Events added from swipes/bookmarks appear directly in the in-app calendar.
-* **One Pro Membership**: HKD 38/month → unlimited swipes, superlikes, advanced filters, no ads, early alerts.
-* **Organizer Tools**: Submission portal + scraping pipeline with freshness logic (airline-style).
-* **Platform**: Web-first (Next.js + Supabase backend).
+- **Timable-style Discover page**: Trending, Nearby, Top 10 events.
+- **AI Matching (Swipe)**: Tinder-like interface to like/pass events, training the app to personalize recommendations.
+- **Calendar-first UX**: Events added from swipes/bookmarks appear directly in the in-app calendar.
+- **One Pro Membership**: HKD 38/month → unlimited swipes, superlikes, advanced filters, no ads, early alerts.
+- **Organizer Tools**: Submission portal + scraping pipeline with freshness logic (airline-style).
+- **Platform**: Web-first (Next.js + Supabase backend).
 
 ---
 
@@ -38,20 +38,20 @@ To be the **go-to calendar-first event discovery app** in Macau/HK/GBA, offering
 
 ### Discover & AI Matching
 
-* As a user, I can see **Trending, Nearby, and Top 10** events on the home page.
-* As a user, I can tap **“TRY AI MATCHING”** to swipe on personalized event cards.
-* As a user, I can save swiped events into my in-app calendar.
+- As a user, I can see **Trending, Nearby, and Top 10** events on the home page.
+- As a user, I can tap **“TRY AI MATCHING”** to swipe on personalized event cards.
+- As a user, I can save swiped events into my in-app calendar.
 
 ### Calendar
 
-* As a user, I can view saved events in **Month, Week, Agenda** views.
-* As a user, I can get conflict warnings if events overlap.
-* As a Pro user, I get early-bird alerts when new events match my preferences.
+- As a user, I can view saved events in **Month, Week, Agenda** views.
+- As a user, I can get conflict warnings if events overlap.
+- As a Pro user, I get early-bird alerts when new events match my preferences.
 
 ### Organizer
 
-* As an organizer, I can **submit events** with title, description, date/time, venue, poster, ticket link.
-* As an organizer, I can **edit/update** events, with changes notifying users who saved them.
+- As an organizer, I can **submit events** with title, description, date/time, venue, poster, ticket link.
+- As an organizer, I can **edit/update** events, with changes notifying users who saved them.
 
 ---
 
@@ -59,63 +59,63 @@ To be the **go-to calendar-first event discovery app** in Macau/HK/GBA, offering
 
 **FR1: Discover Landing Page**
 
-* Timable-style sections (Trending, Nearby, Top 10, Weekend Picks).
-* Event cards with poster, title, venue, date/time, save button.
+- Timable-style sections (Trending, Nearby, Top 10, Weekend Picks).
+- Event cards with poster, title, venue, date/time, save button.
 
 **FR2: AI Matching**
 
-* Swipe deck with Like/Pass/Superlike actions.
-* Store user feedback to refine personalization.
+- Swipe deck with Like/Pass/Superlike actions.
+- Store user feedback to refine personalization.
 
 **FR3: Calendar**
 
-* Events added via swipe/bookmark auto-sync to calendar.
-* Multiple views (month, week, agenda).
+- Events added via swipe/bookmark auto-sync to calendar.
+- Multiple views (month, week, agenda).
 
 **FR4: Membership**
 
-* Free tier: 40 swipes/day, basic calendar.
-* Pro tier: Unlimited swipes, superlikes, advanced filters, no ads, early alerts.
+- Free tier: 40 swipes/day, basic calendar.
+- Pro tier: Unlimited swipes, superlikes, advanced filters, no ads, early alerts.
 
 **FR5: Scraping & Organizer Tools**
 
-* Pipeline: Playwright + Firecrawl + ETag checks + deduplication.
-* Organizer portal: manual submission + bulk import (CSV/ICS).
+- Pipeline: Playwright + Firecrawl + ETag checks + deduplication.
+- Organizer portal: manual submission + bulk import (CSV/ICS).
 
 ---
 
 ## Non-Functional Requirements
 
-* **Performance**: <2s discover page load, <500ms search filter results.
-* **Scalability**: Handle 50k events and 20k users.
-* **SEO**: Server-side rendering for discover sections.
-* **Security**: Supabase RLS, JWT, HTTPS.
+- **Performance**: <2s discover page load, <500ms search filter results.
+- **Scalability**: Handle 50k events and 20k users.
+- **SEO**: Server-side rendering for discover sections.
+- **Security**: Supabase RLS, JWT, HTTPS.
 
 ---
 
 ## Monetization
 
-* **Pro Membership** (HKD 38/month).
-* Future: Event promotion placements, ticketing partnerships.
+- **Pro Membership** (HKD 38/month).
+- Future: Event promotion placements, ticketing partnerships.
 
 ---
 
 ## Risks & Mitigation
 
-* **Scraping fragility** → Use multi-source pipeline, fallback logic, change alerts.
-* **User adoption** → Differentiate with swiping + calendar-first UX.
-* **Organizer adoption** → Lower friction with free submission tools.
+- **Scraping fragility** → Use multi-source pipeline, fallback logic, change alerts.
+- **User adoption** → Differentiate with swiping + calendar-first UX.
+- **Organizer adoption** → Lower friction with free submission tools.
 
 ---
 
 ## Release Criteria
 
-* ✅ Discover landing page (Trending/Nearby/Top 10).
-* ✅ AI Matching MVP.
-* ✅ Calendar integration with saves/swipes.
-* ✅ Pro membership flow.
-* ⏳ Push notifications (Phase 2).
-* ⏳ Google sync (Phase 2).
+- ✅ Discover landing page (Trending/Nearby/Top 10).
+- ✅ AI Matching MVP.
+- ✅ Calendar integration with saves/swipes.
+- ✅ Pro membership flow.
+- ⏳ Push notifications (Phase 2).
+- ⏳ Google sync (Phase 2).
 
 ---
 
@@ -123,11 +123,11 @@ To be the **go-to calendar-first event discovery app** in Macau/HK/GBA, offering
 
 ## Style & Design
 
-* **Inspiration**: Timable layout + Any.do minimalism.
-* **Color scheme**: Clean white background, accent color for CTA (blue or gradient).
-* **Typography**: Modern sans-serif (Inter, Roboto).
-* **Cards**: Rounded corners, event posters as hero images, shadow hover effect.
-* **Navigation**: Bottom nav (Home/Discover, Calendar, Profile).
+- **Inspiration**: Timable layout + Any.do minimalism.
+- **Color scheme**: Clean white background, accent color for CTA (blue or gradient).
+- **Typography**: Modern sans-serif (Inter, Roboto).
+- **Cards**: Rounded corners, event posters as hero images, shadow hover effect.
+- **Navigation**: Bottom nav (Home/Discover, Calendar, Profile).
 
 ---
 
@@ -135,43 +135,43 @@ To be the **go-to calendar-first event discovery app** in Macau/HK/GBA, offering
 
 ### 1. Discover Page (Landing)
 
-* **Header**: Logo + Search bar.
-* **Sections**:
+- **Header**: Logo + Search bar.
+- **Sections**:
+  - “Top 10 Events” (ranked cards).
+  - “Trending Near You” (horizontal scroll).
+  - “Happening This Weekend”.
 
-  * “Top 10 Events” (ranked cards).
-  * “Trending Near You” (horizontal scroll).
-  * “Happening This Weekend”.
-* **CTA**: Full-width button → **TRY AI MATCHING**.
+- **CTA**: Full-width button → **TRY AI MATCHING**.
 
 ### 2. Swipe Deck
 
-* Fullscreen card: poster image, event title, date, venue.
-* Bottom buttons: ❌ (left), ❤️ (right), ⭐ (up = Superlike).
-* Swipe animations: left = pass, right = like, up = superlike.
+- Fullscreen card: poster image, event title, date, venue.
+- Bottom buttons: ❌ (left), ❤️ (right), ⭐ (up = Superlike).
+- Swipe animations: left = pass, right = like, up = superlike.
 
 ### 3. Event Detail
 
-* Poster hero image, title, category tags.
-* Date/time, venue map, ticket button.
-* Save to calendar + Share buttons.
+- Poster hero image, title, category tags.
+- Date/time, venue map, ticket button.
+- Save to calendar + Share buttons.
 
 ### 4. Calendar
 
-* **Views**: Month (grid), Week (columns), Agenda (list).
-* Events shown with category color tags.
-* Tap → Event detail.
+- **Views**: Month (grid), Week (columns), Agenda (list).
+- Events shown with category color tags.
+- Tap → Event detail.
 
 ### 5. Membership Page
 
-* Two-column layout: Free vs Pro (highlight Pro).
-* CTA: “Upgrade to Pro – HKD 38/month”.
-* Payment: Stripe checkout modal.
+- Two-column layout: Free vs Pro (highlight Pro).
+- CTA: “Upgrade to Pro – HKD 38/month”.
+- Payment: Stripe checkout modal.
 
 ### 6. Organizer Portal
 
-* Form: Title, description, poster upload, date/time, venue map, ticket link.
-* Bulk upload: CSV/ICS import.
-* Dashboard: Events submitted, status (pending/approved/live).
+- Form: Title, description, poster upload, date/time, venue map, ticket link.
+- Bulk upload: CSV/ICS import.
+- Dashboard: Events submitted, status (pending/approved/live).
 
 ---
 

@@ -3,6 +3,7 @@
 Epic: #1 - https://github.com/redbear4013/engaged-app-ccpm/issues/1
 
 Tasks:
+
 - #2: Database Schema & Supabase Setup - https://github.com/redbear4013/engaged-app-ccpm/issues/2
 - #3: Project Setup & Architecture - https://github.com/redbear4013/engaged-app-ccpm/issues/3
 - #4: User Authentication & Profiles - https://github.com/redbear4013/engaged-app-ccpm/issues/4
