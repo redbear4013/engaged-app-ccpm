@@ -1,4 +1,5 @@
 export * from './database';
+export * from './scraping';
 
 // Event related types
 export interface Event {
