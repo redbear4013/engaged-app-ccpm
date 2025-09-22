@@ -94,24 +94,24 @@ export class FirecrawlService {
     }
 
     try {
-      return this.parseStructuredData(response.data, config, sourceId, url)
+      return await this.parseStructuredData(response.data, config, sourceId, url)
     } catch (error) {
       console.error('Error parsing Firecrawl response:', error)
       return []
     }
   }
 
-  private parseStructuredData(
+  private async parseStructuredData(
     data: NonNullable<FirecrawlResponse['data']>,
     config: ScrapingConfig,
     sourceId: string,
     sourceUrl: string
-  ): RawEventData[] {
+  ): Promise<RawEventData[]> {
     const events: RawEventData[] = []
 
     // Try to parse from HTML first if available
     if (data.html) {
-      const htmlEvents = this.parseHTMLForEvents(data.html, config, sourceId, sourceUrl)
+      const htmlEvents = await this.parseHTMLForEvents(data.html, config, sourceId, sourceUrl)
       events.push(...htmlEvents)
     }
 
@@ -124,12 +124,12 @@ export class FirecrawlService {
     return events
   }
 
-  private parseHTMLForEvents(
+  private async parseHTMLForEvents(
     html: string,
     config: ScrapingConfig,
     sourceId: string,
     sourceUrl: string
-  ): RawEventData[] {
+  ): Promise<RawEventData[]> {
     // Use a basic HTML parser approach
     // This is a simplified implementation - in production you might want to use Cheerio
     const events: RawEventData[] = []

@@ -5,14 +5,51 @@ export * from './scraping';
 export interface Event {
   id: string;
   title: string;
-  description?: string | undefined;
-  startDate: Date;
-  endDate?: Date | undefined;
-  location?: string | undefined;
-  imageUrl?: string | undefined;
-  sourceUrl?: string | undefined;
+  description?: string | null;
+  shortDescription?: string | null;
+  startTime: Date;
+  endTime: Date;
+  timezone: string;
+  allDay: boolean;
+  venue?: {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  } | null;
+  customLocation?: string | null;
+  organizer?: {
+    id: string;
+    organizationName: string;
+    isVerified: boolean;
+    logoUrl?: string | null;
+  } | null;
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+    icon?: string | null;
+    color: string;
+  } | null;
+  posterUrl?: string | null;
+  galleryUrls: string[];
+  tags: string[];
+  isFree: boolean;
+  priceRange: number[];
+  ticketUrl?: string | null;
+  registrationRequired: boolean;
+  capacity?: number | null;
+  popularityScore: number;
+  qualityScore: number;
+  status: string;
+  isFeatured: boolean;
+  isTrending: boolean;
+  sourceUrl?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  publishedAt?: Date | null;
 }
 
 export interface EventFilters {

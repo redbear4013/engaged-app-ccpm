@@ -18,25 +18,55 @@ export function useEvents(params: FetchEventsParams = {}) {
     queryFn: async (): Promise<PaginatedResponse<Event>> => {
       let query = supabase
         .from('events')
-        .select('*', { count: 'exact' })
+        .select(`
+          *,
+          venues (
+            id,
+            name,
+            address,
+            city,
+            latitude,
+            longitude
+          ),
+          event_categories (
+            id,
+            name,
+            slug,
+            icon,
+            color
+          ),
+          organizers (
+            id,
+            organization_name,
+            is_verified,
+            logo_url
+          )
+        `, { count: 'exact' })
+        .eq('status', 'published')
         .range((page - 1) * limit, page * limit - 1)
-        .order('start_date', { ascending: true });
+        .order('start_time', { ascending: true });
 
       // Apply filters
       if (filters.search) {
         query = query.or(
-          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,tags.cs.{${filters.search}}`
         );
       }
 
       if (filters.location) {
-        query = query.ilike('location', `%${filters.location}%`);
+        query = query.or(
+          `venues.city.ilike.%${filters.location}%,custom_location.ilike.%${filters.location}%`
+        );
+      }
+
+      if (filters.categories && filters.categories.length > 0) {
+        query = query.in('category_id', filters.categories);
       }
 
       if (filters.dateRange) {
         query = query
-          .gte('start_date', filters.dateRange.start.toISOString())
-          .lte('start_date', filters.dateRange.end.toISOString());
+          .gte('start_time', filters.dateRange.start.toISOString())
+          .lte('start_time', filters.dateRange.end.toISOString());
       }
 
       const { data, error, count } = await query;
@@ -45,19 +75,7 @@ export function useEvents(params: FetchEventsParams = {}) {
         throw new Error(error.message);
       }
 
-      const events: Event[] =
-        data?.map(event => ({
-          id: event.id,
-          title: event.title,
-          description: event.description || undefined,
-          startDate: new Date(event.start_date),
-          endDate: event.end_date ? new Date(event.end_date) : undefined,
-          location: event.location || undefined,
-          imageUrl: event.image_url || undefined,
-          sourceUrl: event.source_url || undefined,
-          createdAt: new Date(event.created_at),
-          updatedAt: new Date(event.updated_at),
-        })) || [];
+      const events: Event[] = transformEventsData(data || []);
 
       return {
         data: events,
@@ -78,7 +96,30 @@ export function useEvent(id: string) {
     queryFn: async (): Promise<Event> => {
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          venues (
+            id,
+            name,
+            address,
+            city,
+            latitude,
+            longitude
+          ),
+          event_categories (
+            id,
+            name,
+            slug,
+            icon,
+            color
+          ),
+          organizers (
+            id,
+            organization_name,
+            is_verified,
+            logo_url
+          )
+        `)
         .eq('id', id)
         .single();
 
@@ -86,18 +127,11 @@ export function useEvent(id: string) {
         throw new Error(error.message);
       }
 
-      return {
-        id: data.id,
-        title: data.title,
-        description: data.description || undefined,
-        startDate: new Date(data.start_date),
-        endDate: data.end_date ? new Date(data.end_date) : undefined,
-        location: data.location || undefined,
-        imageUrl: data.image_url || undefined,
-        sourceUrl: data.source_url || undefined,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
-      };
+      const transformedEvents = transformEventsData([data]);
+      if (transformedEvents.length === 0) {
+        throw new Error('Event not found');
+      }
+      return transformedEvents[0];
     },
     enabled: !!id,
   });
@@ -115,11 +149,25 @@ export function useCreateEvent() {
         .insert({
           title: event.title,
           description: event.description,
-          start_date: event.startDate.toISOString(),
-          end_date: event.endDate?.toISOString(),
-          location: event.location,
-          image_url: event.imageUrl,
+          short_description: event.shortDescription,
+          start_time: event.startTime.toISOString(),
+          end_time: event.endTime.toISOString(),
+          timezone: event.timezone,
+          all_day: event.allDay,
+          venue_id: event.venue?.id,
+          custom_location: event.customLocation,
+          organizer_id: event.organizer?.id,
+          category_id: event.category?.id,
+          poster_url: event.posterUrl,
+          gallery_urls: event.galleryUrls,
+          tags: event.tags,
+          is_free: event.isFree,
+          price_range: event.priceRange,
+          ticket_url: event.ticketUrl,
+          registration_required: event.registrationRequired,
+          capacity: event.capacity,
           source_url: event.sourceUrl,
+          status: 'published',
         })
         .select()
         .single();
@@ -134,4 +182,59 @@ export function useCreateEvent() {
       queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] });
     },
   });
+}
+
+/**
+ * Transform raw database data to Event interface
+ */
+function transformEventsData(data: any[]): Event[] {
+  return data.map(row => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    shortDescription: row.short_description,
+    startTime: new Date(row.start_time),
+    endTime: new Date(row.end_time),
+    timezone: row.timezone,
+    allDay: row.all_day,
+    venue: row.venues ? {
+      id: row.venues.id,
+      name: row.venues.name,
+      address: row.venues.address,
+      city: row.venues.city,
+      latitude: row.venues.latitude,
+      longitude: row.venues.longitude,
+    } : null,
+    customLocation: row.custom_location,
+    organizer: row.organizers ? {
+      id: row.organizers.id,
+      organizationName: row.organizers.organization_name,
+      isVerified: row.organizers.is_verified,
+      logoUrl: row.organizers.logo_url,
+    } : null,
+    category: row.event_categories ? {
+      id: row.event_categories.id,
+      name: row.event_categories.name,
+      slug: row.event_categories.slug,
+      icon: row.event_categories.icon,
+      color: row.event_categories.color,
+    } : null,
+    posterUrl: row.poster_url,
+    galleryUrls: row.gallery_urls || [],
+    tags: row.tags || [],
+    isFree: row.is_free,
+    priceRange: row.price_range || [0, 0],
+    ticketUrl: row.ticket_url,
+    registrationRequired: row.registration_required,
+    capacity: row.capacity,
+    popularityScore: row.popularity_score,
+    qualityScore: row.quality_score,
+    status: row.status,
+    isFeatured: row.is_featured,
+    isTrending: row.is_trending,
+    sourceUrl: row.source_url,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+    publishedAt: row.published_at ? new Date(row.published_at) : null,
+  }));
 }
