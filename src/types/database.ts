@@ -350,6 +350,117 @@ export interface Database {
           updated_at?: string;
         };
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          stripe_subscription_id: string;
+          status: string;
+          plan_type: string;
+          current_period_start: string;
+          current_period_end: string;
+          cancel_at_period_end: boolean;
+          amount: number;
+          currency: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          stripe_subscription_id: string;
+          status: string;
+          plan_type?: string;
+          current_period_start: string;
+          current_period_end: string;
+          cancel_at_period_end?: boolean;
+          amount: number;
+          currency?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          stripe_subscription_id?: string;
+          status?: string;
+          plan_type?: string;
+          current_period_start?: string;
+          current_period_end?: string;
+          cancel_at_period_end?: boolean;
+          amount?: number;
+          currency?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      payments: {
+        Row: {
+          id: string;
+          user_id: string;
+          subscription_id: string | null;
+          stripe_payment_intent_id: string;
+          amount: number;
+          currency: string;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          subscription_id?: string | null;
+          stripe_payment_intent_id: string;
+          amount: number;
+          currency?: string;
+          status: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          subscription_id?: string | null;
+          stripe_payment_intent_id?: string;
+          amount?: number;
+          currency?: string;
+          status?: string;
+          created_at?: string;
+        };
+      };
+      user_usage: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          swipes_count: number;
+          superlikes_count: number;
+          searches_count: number;
+          advanced_filters_used: number;
+          early_alerts_sent: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          date?: string;
+          swipes_count?: number;
+          superlikes_count?: number;
+          searches_count?: number;
+          advanced_filters_used?: number;
+          early_alerts_sent?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          date?: string;
+          swipes_count?: number;
+          superlikes_count?: number;
+          searches_count?: number;
+          advanced_filters_used?: number;
+          early_alerts_sent?: number;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

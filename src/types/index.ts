@@ -108,6 +108,71 @@ export interface MatchingPreferences {
   };
 }
 
+// Subscription and Payment types
+export interface Subscription {
+  id: string;
+  userId: string;
+  stripeSubscriptionId: string;
+  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing';
+  planType: 'pro' | 'premium';
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  amount: number;
+  currency: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Payment {
+  id: string;
+  userId: string;
+  subscriptionId?: string;
+  stripePaymentIntentId: string;
+  amount: number;
+  currency: string;
+  status: 'succeeded' | 'failed' | 'pending' | 'canceled';
+  createdAt: Date;
+}
+
+export interface UserUsage {
+  id: string;
+  userId: string;
+  date: Date;
+  swipesCount: number;
+  superlikesCount: number;
+  searchesCount: number;
+  advancedFiltersUsed: number;
+  earlyAlertsSent: number;
+  createdAt: Date;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  stripePriceId: string;
+  amount: number;
+  currency: string;
+  interval: 'month' | 'year';
+  features: string[];
+  limits: {
+    dailySwipes: number;
+    superlikes: number;
+    advancedFilters: boolean;
+    earlyAccess: boolean;
+    prioritySupport: boolean;
+  };
+}
+
+export interface UsageLimits {
+  dailySwipes: number;
+  currentSwipes: number;
+  superlikes: number;
+  currentSuperlikes: number;
+  canUseAdvancedFilters: boolean;
+  hasEarlyAccess: boolean;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   data?: T;
