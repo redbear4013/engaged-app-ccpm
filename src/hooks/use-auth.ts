@@ -1,93 +1,102 @@
-import { useEffect } from 'react';
-import { useAuthStore } from '@/store/auth-store';
-import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/types';
+import { useContext } from 'react';
+import { AuthContext } from '@/providers/auth-provider';
+import { useAuthStore as useAuthStoreInternal } from '@/stores/auth-store';
+import {
+  AuthState,
+  AuthActions,
+  UserProfile,
+  AuthResult,
+  SignInData,
+  SignUpData,
+  UpdateProfileData,
+} from '@/types/auth';
 
-export function useAuth() {
-  const { user, isLoading, isAuthenticated, setUser, setLoading } =
-    useAuthStore();
+// Primary hook that uses the AuthContext when available
+export function useAuth(): AuthState & AuthActions {
+  const context = useContext(AuthContext);
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      setLoading(true);
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+  if (context) {
+    return context;
+  }
 
-      if (error) {
-        console.error('Error getting session:', error);
-        setUser(null);
-        return;
-      }
+  // Fallback to store-only implementation for backwards compatibility
+  return useAuthStoreOnly();
+}
 
-      if (session?.user) {
-        // Fetch user profile from database
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+// Direct store access hook for components that need store access outside provider
+export function useAuthStoreOnly() {
+  const store = useAuthStoreInternal();
 
-        if (profile) {
-          const userProfile: UserProfile = {
-            id: profile.id,
-            email: profile.email,
-            fullName: profile.full_name,
-            avatarUrl: profile.avatar_url,
-            preferences: profile.preferences,
-            isPro: profile.is_pro,
-            createdAt: new Date(profile.created_at),
-            updatedAt: new Date(profile.updated_at),
-          };
-          setUser(userProfile);
-        }
-      } else {
-        setUser(null);
-      }
-    };
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Fetch user profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          const userProfile: UserProfile = {
-            id: profile.id,
-            email: profile.email,
-            fullName: profile.full_name,
-            avatarUrl: profile.avatar_url,
-            preferences: profile.preferences,
-            isPro: profile.is_pro,
-            createdAt: new Date(profile.created_at),
-            updatedAt: new Date(profile.updated_at),
-          };
-          setUser(userProfile);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-    });
-
-    getInitialSession();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [setUser, setLoading]);
+  // Create stub actions for store-only usage
+  const actions: AuthActions = {
+    signIn: async (email: string, password: string): Promise<AuthResult> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
+    signUp: async (email: string, password: string, fullName?: string): Promise<AuthResult> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
+    signOut: async (): Promise<void> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
+    resetPassword: async (email: string): Promise<AuthResult> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
+    updatePassword: async (password: string): Promise<AuthResult> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
+    updateProfile: async (profile: Partial<UserProfile>): Promise<AuthResult> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
+    resendConfirmation: async (email: string): Promise<AuthResult> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
+  };
 
   return {
-    user,
-    isLoading,
-    isAuthenticated,
+    ...store,
+    ...actions,
   };
+}
+
+// Utility hooks for specific use cases
+export function useAuthState(): AuthState {
+  const { user, isLoading, isAuthenticated, isInitialized } = useAuth();
+  return { user, isLoading, isAuthenticated, isInitialized };
+}
+
+export function useAuthActions(): AuthActions {
+  const {
+    signIn,
+    signOut,
+    signUp,
+    resetPassword,
+    updatePassword,
+    updateProfile,
+    resendConfirmation,
+  } = useAuth();
+
+  return {
+    signIn,
+    signOut,
+    signUp,
+    resetPassword,
+    updatePassword,
+    updateProfile,
+    resendConfirmation,
+  };
+}
+
+export function useUser(): UserProfile | null {
+  const { user } = useAuth();
+  return user;
+}
+
+export function useIsAuthenticated(): boolean {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated;
+}
+
+export function useAuthLoading(): boolean {
+  const { isLoading } = useAuth();
+  return isLoading;
 }

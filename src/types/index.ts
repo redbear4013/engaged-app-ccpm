@@ -1,5 +1,6 @@
 export * from './database';
 export * from './scraping';
+export * from './auth';
 
 // Event related types
 export interface Event {
