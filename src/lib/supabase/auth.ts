@@ -1,6 +1,5 @@
 import { createBrowserClient, createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   AuthResult,
@@ -28,6 +27,7 @@ export function createBrowserSupabaseClient() {
 
 // Server client for server-side operations (App Router)
 export async function createServerSupabaseClient() {
+  const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
