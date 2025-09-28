@@ -65,6 +65,13 @@ secret = "env(FACEBOOK_SECRET)"
 redirect_uri = ""
 url = ""
 
+[auth.external.github]
+enabled = true
+client_id = "env(GITHUB_CLIENT_ID)"
+secret = "env(GITHUB_SECRET)"
+redirect_uri = ""
+url = ""
+
 [db]
 # Port to use for the local database URL.
 port = 54322
