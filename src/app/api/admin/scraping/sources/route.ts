@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SourceManager } from '@/services/scraping/source-manager'
-import { eventScraperWorker } from '@/workers/event-scraper'
 
 const sourceManager = new SourceManager()
 

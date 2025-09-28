@@ -43,9 +43,10 @@ export interface AuthActions {
   signUp: (email: string, password: string, fullName?: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<AuthResult>;
-  updatePassword: (password: string) => Promise<AuthResult>;
+  updatePassword: (password: string, currentPassword?: string) => Promise<AuthResult>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<AuthResult>;
   resendConfirmation: (email: string) => Promise<AuthResult>;
+  deleteAccount: () => Promise<AuthResult>;
 }
 
 // Authentication results

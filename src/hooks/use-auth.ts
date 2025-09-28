@@ -50,6 +50,9 @@ export function useAuthStoreOnly() {
     resendConfirmation: async (email: string): Promise<AuthResult> => {
       throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
     },
+    deleteAccount: async (): Promise<AuthResult> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
   };
 
   return {
@@ -73,6 +76,7 @@ export function useAuthActions(): AuthActions {
     updatePassword,
     updateProfile,
     resendConfirmation,
+    deleteAccount,
   } = useAuth();
 
   return {
@@ -83,6 +87,7 @@ export function useAuthActions(): AuthActions {
     updatePassword,
     updateProfile,
     resendConfirmation,
+    deleteAccount,
   };
 }
 

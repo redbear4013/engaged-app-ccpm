@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form-components';
 import { UserProfile } from '@/types/auth';
 import { useRouter } from 'next/navigation';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 // Validation schemas
 const passwordSchema = z.object({
@@ -57,7 +58,7 @@ interface ProfileSettingsProps {
 }
 
 export function ProfileSettings({ user, className }: ProfileSettingsProps) {
-  const { updatePassword, updateProfile, signOut } = useAuth();
+  const { updatePassword, updateProfile, signOut, deleteAccount } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = React.useState<'preferences' | 'password' | 'account'>('preferences');
   const [isPasswordLoading, setIsPasswordLoading] = React.useState(false);
@@ -66,6 +67,8 @@ export function ProfileSettings({ user, className }: ProfileSettingsProps) {
   const [preferencesError, setPreferencesError] = React.useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = React.useState<string | null>(null);
   const [preferencesSuccess, setPreferencesSuccess] = React.useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = React.useState(false);
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -96,7 +99,7 @@ export function ProfileSettings({ user, className }: ProfileSettingsProps) {
       setPasswordError(null);
       setPasswordSuccess(null);
 
-      const result = await updatePassword(data.newPassword);
+      const result = await updatePassword(data.newPassword, data.currentPassword);
 
       if (!result.success) {
         setPasswordError(result.error || 'Failed to update password. Please try again.');
@@ -153,6 +156,27 @@ export function ProfileSettings({ user, className }: ProfileSettingsProps) {
       router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeletingAccount(true);
+      const result = await deleteAccount();
+
+      if (!result.success) {
+        console.error('Account deletion failed:', result.error);
+        return;
+      }
+
+      // Account deleted successfully, user will be signed out automatically
+      // Redirect to home page
+      router.push('/');
+    } catch (error) {
+      console.error('Account deletion error:', error);
+    } finally {
+      setIsDeletingAccount(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -387,10 +411,7 @@ export function ProfileSettings({ user, className }: ProfileSettingsProps) {
                 </div>
                 <Button
                   variant="destructive"
-                  onClick={() => {
-                    // This would typically open a confirmation modal
-                    alert('Account deletion would be implemented here with proper confirmation');
-                  }}
+                  onClick={() => setShowDeleteDialog(true)}
                 >
                   Delete
                 </Button>
@@ -399,6 +420,30 @@ export function ProfileSettings({ user, className }: ProfileSettingsProps) {
           </FormSection>
         </div>
       )}
+
+      {/* Account Deletion Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeleteAccount}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data."
+        confirmText="Delete Account"
+        variant="destructive"
+        isLoading={isDeletingAccount}
+      >
+        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+          <p className="text-sm text-red-800">
+            <strong>Warning:</strong> This will permanently delete:
+          </p>
+          <ul className="mt-2 text-xs text-red-700 list-disc list-inside space-y-1">
+            <li>Your profile and account information</li>
+            <li>All your saved events and preferences</li>
+            <li>Any calendar integrations</li>
+            <li>All associated data</li>
+          </ul>
+        </div>
+      </ConfirmationDialog>
     </div>
   );
 }

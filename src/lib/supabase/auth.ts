@@ -172,8 +172,26 @@ export class SupabaseAuth {
     }
   }
 
-  async updatePassword(password: string): Promise<AuthResult> {
+  async updatePassword(password: string, currentPassword?: string): Promise<AuthResult> {
     try {
+      // If current password is provided, verify it first
+      if (currentPassword) {
+        const { data: { user } } = await this.client.auth.getUser();
+        if (user?.email) {
+          const verifyResult = await this.signIn({
+            email: user.email,
+            password: currentPassword
+          });
+
+          if (!verifyResult.success) {
+            return {
+              success: false,
+              error: 'Current password is incorrect',
+            };
+          }
+        }
+      }
+
       const { error } = await this.client.auth.updateUser({
         password,
       });
@@ -296,6 +314,51 @@ export class SupabaseAuth {
 
   onAuthStateChange(callback: (event: string, session: any) => void) {
     return this.client.auth.onAuthStateChange(callback);
+  }
+
+  async deleteAccount(): Promise<AuthResult> {
+    try {
+      const { data: { user } } = await this.client.auth.getUser();
+
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated',
+        };
+      }
+
+      // Delete profile data first
+      const { error: profileError } = await this.client
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Error deleting profile:', profileError);
+        // Continue with auth deletion even if profile deletion fails
+      }
+
+      // Delete the user from auth
+      const { error: authError } = await this.client.rpc('delete_user');
+
+      if (authError) {
+        return {
+          success: false,
+          error: 'Failed to delete account. Please contact support.',
+        };
+      }
+
+      // Sign out the user
+      await this.client.auth.signOut();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      return {
+        success: false,
+        error: 'Network error occurred',
+      };
+    }
   }
 
   private mapAuthError(message: string): string {

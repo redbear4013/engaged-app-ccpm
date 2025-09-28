@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { authClient } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -58,26 +58,13 @@ export function SignInForm({
       setIsLoading(true);
       setError(null);
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const result = await authClient.signIn({
         email: data.email,
         password: data.password,
       });
 
-      if (signInError) {
-        // Handle specific auth errors
-        switch (signInError.message) {
-          case 'Invalid login credentials':
-            setError('Invalid email or password. Please try again.');
-            break;
-          case 'Email not confirmed':
-            setError('Please check your email and click the confirmation link.');
-            break;
-          case 'Too many requests':
-            setError('Too many login attempts. Please try again later.');
-            break;
-          default:
-            setError(signInError.message || 'Failed to sign in. Please try again.');
-        }
+      if (!result.success) {
+        setError(result.error || 'Failed to sign in. Please try again.');
         return;
       }
 

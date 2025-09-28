@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { authClient } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -79,38 +79,25 @@ export function SignUpForm({
       setError(null);
       setSuccessMessage(null);
 
-      const { error: signUpError } = await supabase.auth.signUp({
+      const result = await authClient.signUp({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-          },
-        },
+        fullName: data.fullName,
       });
 
-      if (signUpError) {
-        // Handle specific auth errors
-        switch (signUpError.message) {
-          case 'User already registered':
-            setError('An account with this email already exists. Please sign in instead.');
-            break;
-          case 'Password should be at least 6 characters':
-            setError('Password must be at least 6 characters long.');
-            break;
-          case 'Invalid email':
-            setError('Please enter a valid email address.');
-            break;
-          default:
-            setError(signUpError.message || 'Failed to create account. Please try again.');
-        }
+      if (!result.success) {
+        setError(result.error || 'Failed to create account. Please try again.');
         return;
       }
 
       // Success - show confirmation message
-      setSuccessMessage(
-        'Account created successfully! Please check your email for a confirmation link.'
-      );
+      if (result.data?.requiresConfirmation) {
+        setSuccessMessage(
+          'Account created successfully! Please check your email for a confirmation link.'
+        );
+      } else {
+        setSuccessMessage('Account created successfully!');
+      }
 
       // Call success callback after a short delay
       setTimeout(() => {

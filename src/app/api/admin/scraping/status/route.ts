@@ -1,34 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ScrapingService } from '@/services/scraping'
-import { eventScraperWorker } from '@/workers/event-scraper'
-import { scrapingScheduler } from '@/services/scraping/scheduler'
+import { SourceManager } from '@/services/scraping/source-manager'
 
 export async function GET(request: NextRequest) {
   try {
-    // Initialize services if needed
+    // Initialize services
     const scrapingService = new ScrapingService()
-    await scrapingService.initialize()
+    const sourceManager = new SourceManager()
 
-    // Get all metrics
-    const [scrapingMetrics, queueStats, schedulerMetrics] = await Promise.all([
-      scrapingService.getMetrics(),
-      eventScraperWorker.getQueueStats(),
-      scrapingScheduler.getMetrics()
+    await Promise.all([
+      scrapingService.initialize(),
+      sourceManager.initialize()
     ])
 
+    // Get basic metrics without Bull
+    const sources = sourceManager.getAllSources()
+    const activeSources = sources.filter(s => s.isActive)
+
     const status = {
-      scraping: scrapingMetrics,
-      queue: queueStats,
-      scheduler: schedulerMetrics,
+      scraping: {
+        totalSources: sources.length,
+        activeSources: activeSources.length,
+        inactiveSources: sources.length - activeSources.length,
+        lastScrapedAt: null, // Would need to query database for actual last scrape times
+        errorRate: 0, // Simplified - would need to track this
+      },
+      queue: {
+        waiting: 0, // No queue in simplified version
+        active: 0,
+        completed: 0,
+        failed: 0,
+        delayed: 0,
+        paused: 0
+      },
+      scheduler: {
+        running: false, // Simplified - no scheduler
+        nextRun: null,
+        intervalMinutes: null
+      },
       timestamp: new Date().toISOString(),
-      healthy: queueStats.failed < 10 && scrapingMetrics.errorRate < 0.2
+      healthy: true // Simplified health check
     }
 
     return NextResponse.json(status)
   } catch (error) {
     console.error('Error getting scraping status:', error)
     return NextResponse.json(
-      { error: 'Failed to get scraping status' },
+      {
+        error: 'Failed to get scraping status',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
@@ -39,36 +60,42 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { action } = body
 
+    // Simplified actions without Bull queue
     switch (action) {
       case 'start-scheduler':
-        scrapingScheduler.start()
-        return NextResponse.json({ message: 'Scheduler started' })
+        return NextResponse.json({
+          message: 'Scheduler not available in simplified mode. Use direct scraping endpoints instead.'
+        })
 
       case 'stop-scheduler':
-        scrapingScheduler.stop()
-        return NextResponse.json({ message: 'Scheduler stopped' })
+        return NextResponse.json({
+          message: 'Scheduler not available in simplified mode.'
+        })
 
       case 'restart-scheduler':
-        await scrapingScheduler.restart()
-        return NextResponse.json({ message: 'Scheduler restarted' })
+        return NextResponse.json({
+          message: 'Scheduler not available in simplified mode.'
+        })
 
       case 'pause-queue':
-        await eventScraperWorker.pauseQueue()
-        return NextResponse.json({ message: 'Queue paused' })
+        return NextResponse.json({
+          message: 'Queue not available in simplified mode.'
+        })
 
       case 'resume-queue':
-        await eventScraperWorker.resumeQueue()
-        return NextResponse.json({ message: 'Queue resumed' })
+        return NextResponse.json({
+          message: 'Queue not available in simplified mode.'
+        })
 
       case 'retry-failed':
-        await eventScraperWorker.retryFailedJobs()
-        return NextResponse.json({ message: 'Failed jobs queued for retry' })
+        return NextResponse.json({
+          message: 'No failed jobs to retry in simplified mode.'
+        })
 
       case 'cleanup':
-        const cleaned = await eventScraperWorker.cleanQueue()
         return NextResponse.json({
-          message: 'Queue cleaned',
-          removed: cleaned.length
+          message: 'No queue to clean in simplified mode.',
+          removed: 0
         })
 
       default:
@@ -80,7 +107,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error performing scraping action:', error)
     return NextResponse.json(
-      { error: 'Failed to perform action' },
+      {
+        error: 'Failed to perform action',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

@@ -3,34 +3,16 @@
 import { useAuth } from '@/hooks/use-auth';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { ProfileSettings } from '@/components/profile/profile-settings';
+import { ProtectedRoute } from '@/components/auth';
 import { useState } from 'react';
 
 export default function ProfilePage() {
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600">Unable to load profile. Please try again.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
+    <ProtectedRoute>
+      {user && (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -89,5 +71,7 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+      )}
+    </ProtectedRoute>
   );
 }

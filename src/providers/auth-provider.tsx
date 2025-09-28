@@ -187,8 +187,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const updatePassword = useCallback(
-    async (password: string): Promise<AuthResult> => {
-      return authClient.updatePassword(password);
+    async (password: string, currentPassword?: string): Promise<AuthResult> => {
+      return authClient.updatePassword(password, currentPassword);
     },
     []
   );
@@ -225,6 +225,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     []
   );
 
+  const deleteAccount = useCallback(async (): Promise<AuthResult> => {
+    try {
+      setLoading(true);
+      const result = await authClient.deleteAccount();
+
+      if (result.success) {
+        // User will be signed out and state cleared by authClient
+        setUser(null);
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: 'An unexpected error occurred',
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading, setUser]);
+
   const contextValue: AuthContextType = {
     // State
     user,
@@ -239,6 +260,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updatePassword,
     updateProfile,
     resendConfirmation,
+    deleteAccount,
   };
 
   return (

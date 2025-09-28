@@ -132,6 +132,28 @@ export function UserMenu({ className }: UserMenuProps) {
               Saved Events
             </DropdownMenu.Item>
 
+            <DropdownMenu.Item
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer focus:outline-none focus:bg-gray-100"
+              onClick={() => router.push('/organizer')}
+            >
+              <svg className="h-4 w-4 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 9v2m-6 0h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+              Organizer Portal
+            </DropdownMenu.Item>
+
+            {user.isPro && (
+              <DropdownMenu.Item
+                className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 hover:text-purple-900 cursor-pointer focus:outline-none focus:bg-purple-50"
+                onClick={() => router.push('/admin/events')}
+              >
+                <svg className="h-4 w-4 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Admin Dashboard
+              </DropdownMenu.Item>
+            )}
+
             {!user.isPro && (
               <DropdownMenu.Item
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer focus:outline-none focus:bg-gray-100"
@@ -258,6 +280,22 @@ export function UserMenuMobile({ className }: UserMenuProps) {
             >
               Saved Events
             </DropdownMenu.Item>
+
+            <DropdownMenu.Item
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+              onClick={() => router.push('/organizer')}
+            >
+              Organizer Portal
+            </DropdownMenu.Item>
+
+            {user.isPro && (
+              <DropdownMenu.Item
+                className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 cursor-pointer"
+                onClick={() => router.push('/admin/events')}
+              >
+                Admin Dashboard
+              </DropdownMenu.Item>
+            )}
 
             {!user.isPro && (
               <DropdownMenu.Item

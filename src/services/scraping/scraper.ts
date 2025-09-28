@@ -149,7 +149,8 @@ export class EventScraper {
     sourceId: string
   ): Promise<RawEventData[]> {
     try {
-      const events = await page.evaluate((cfg, srcId) => {
+      const events = await page.evaluate((args) => {
+        const { cfg, srcId } = args
         const eventElements = document.querySelectorAll(cfg.selectors.title)
         const extractedEvents: RawEventData[] = []
 
@@ -163,29 +164,29 @@ export class EventScraper {
             if (!container) return
 
             // Extract event data using selectors
-            const title = this.extractText(container, cfg.selectors.title)
+            const title = extractText(container, cfg.selectors.title)
             if (!title) return // Skip if no title
 
             const description = cfg.selectors.description ?
-              this.extractText(container, cfg.selectors.description) : undefined
+              extractText(container, cfg.selectors.description) : undefined
 
             const startTime = cfg.selectors.startTime ?
-              this.extractText(container, cfg.selectors.startTime) : undefined
+              extractText(container, cfg.selectors.startTime) : undefined
 
             const endTime = cfg.selectors.endTime ?
-              this.extractText(container, cfg.selectors.endTime) : undefined
+              extractText(container, cfg.selectors.endTime) : undefined
 
             const location = cfg.selectors.location ?
-              this.extractText(container, cfg.selectors.location) : undefined
+              extractText(container, cfg.selectors.location) : undefined
 
             const price = cfg.selectors.price ?
-              this.extractText(container, cfg.selectors.price) : undefined
+              extractText(container, cfg.selectors.price) : undefined
 
             const imageUrl = cfg.selectors.image ?
-              this.extractAttribute(container, cfg.selectors.image, 'src') : undefined
+              extractAttribute(container, cfg.selectors.image, 'src') : undefined
 
             const sourceUrl = cfg.selectors.link ?
-              this.extractAttribute(container, cfg.selectors.link, 'href') : window.location.href
+              extractAttribute(container, cfg.selectors.link, 'href') : window.location.href
 
             extractedEvents.push({
               title: title.trim(),
@@ -217,7 +218,7 @@ export class EventScraper {
           const element = container.querySelector(selector)
           return element?.getAttribute(attribute) || undefined
         }
-      }, config, sourceId)
+      }, { cfg: config, srcId: sourceId })
 
       return events.filter(event => event.title) // Filter out events without titles
     } catch (error) {

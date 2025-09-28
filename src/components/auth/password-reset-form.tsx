@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { authClient } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -81,15 +81,10 @@ export function PasswordResetForm({
       setError(null);
       setSuccessMessage(null);
 
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        data.email,
-        {
-          redirectTo: `${window.location.origin}/auth/reset-password`,
-        }
-      );
+      const result = await authClient.resetPassword(data.email);
 
-      if (resetError) {
-        setError(resetError.message || 'Failed to send reset email. Please try again.');
+      if (!result.success) {
+        setError(result.error || 'Failed to send reset email. Please try again.');
         return;
       }
 
@@ -111,12 +106,10 @@ export function PasswordResetForm({
       setError(null);
       setSuccessMessage(null);
 
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: data.password,
-      });
+      const result = await authClient.updatePassword(data.password);
 
-      if (updateError) {
-        setError(updateError.message || 'Failed to update password. Please try again.');
+      if (!result.success) {
+        setError(result.error || 'Failed to update password. Please try again.');
         return;
       }
 
