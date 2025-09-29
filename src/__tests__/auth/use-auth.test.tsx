@@ -26,7 +26,7 @@ const mockAuthStore = {
 };
 
 jest.mock('@/stores/auth-store', () => ({
-  useAuthStore: () => mockAuthStore,
+  useAuthStore: jest.fn(() => mockAuthStore),
 }));
 
 // Mock the auth client
@@ -86,6 +86,7 @@ describe('useAuth hook', () => {
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
       resendConfirmation: jest.fn(),
+      deleteAccount: jest.fn(),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -136,6 +137,7 @@ describe('useAuthState hook', () => {
     updatePassword: jest.fn(),
     updateProfile: jest.fn(),
     resendConfirmation: jest.fn(),
+    deleteAccount: jest.fn(),
   };
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -169,6 +171,7 @@ describe('useAuthActions hook', () => {
     updatePassword: jest.fn(),
     updateProfile: jest.fn(),
     resendConfirmation: jest.fn(),
+    deleteAccount: jest.fn(),
   };
 
   const mockAuthContext: AuthState & AuthActions = {
@@ -224,6 +227,7 @@ describe('useUser hook', () => {
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
       resendConfirmation: jest.fn(),
+      deleteAccount: jest.fn(),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -259,6 +263,7 @@ describe('useUser hook', () => {
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
       resendConfirmation: jest.fn(),
+      deleteAccount: jest.fn(),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -287,6 +292,7 @@ describe('useIsAuthenticated hook', () => {
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
       resendConfirmation: jest.fn(),
+      deleteAccount: jest.fn(),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -313,6 +319,7 @@ describe('useIsAuthenticated hook', () => {
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
       resendConfirmation: jest.fn(),
+      deleteAccount: jest.fn(),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -341,6 +348,7 @@ describe('useAuthLoading hook', () => {
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
       resendConfirmation: jest.fn(),
+      deleteAccount: jest.fn(),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (

@@ -2,44 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { AIMatchingService, type EventData, type EventPreferences, type EventAnalytics } from '@/services/ai-matching-service';
 
-interface Event {
-  id: string;
-  title: string;
-  description?: string;
-  date: string;
-  time?: string;
-  location: string;
-  venue?: string;
-  price: number;
-  category: string;
-  tags: string[];
-  imageUrl?: string;
-  organizer: string;
-  attendeesCount?: number;
-  maxAttendees?: number;
-}
-
-interface EventAnalytics {
-  totalSwipes: number;
-  interestedCount: number;
-  passedCount: number;
-  savedEvents: number;
-  topCategories: Array<{ name: string; count: number; percentage: number }>;
-  avgEventScore: number;
-  priceRangePreference: { min: number; max: number };
-  timePreferences: Array<{ time: string; count: number }>;
-  locationPreferences: Array<{ location: string; count: number }>;
-}
-
-interface EventPreferences {
-  location: string;
-  maxDistance: number;
-  interests: string[];
-  eventTypes: string[];
-  priceRange: [number, number];
-  timeOfDay: string[];
-}
+// Use types from service
+type Event = EventData;
 
 interface UseAIEventMatchingProps {
   userId?: string;
@@ -60,8 +26,8 @@ export function useAIEventMatching({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data for demonstration - in real implementation, this would come from your events database
-  const mockEvents: Event[] = [
+  // Fallback mock data for demonstration
+  const getFallbackEvents = (): Event[] => [
     {
       id: '1',
       title: 'Hong Kong Art Fair 2024',
@@ -140,34 +106,20 @@ export function useAIEventMatching({
     }
   ];
 
+  // Load real events from database or fallback to mock data
+  const getEventsData = async (): Promise<Event[]> => {
+    if (userId) {
+      const realEvents = await AIMatchingService.loadEvents();
+      if (realEvents.length > 0) {
+        return realEvents;
+      }
+    }
+    return getFallbackEvents();
+  };
+
   // Calculate event score based on user preferences
   const calculateEventScore = useCallback((event: Event): number => {
-    if (!preferences) return Math.floor(Math.random() * 30) + 70; // Random score between 70-100
-
-    let score = 50; // Base score
-
-    // Price preference matching
-    const [minPrice, maxPrice] = preferences.priceRange;
-    if (event.price >= minPrice && event.price <= maxPrice) {
-      score += 20;
-    } else if (Math.abs(event.price - minPrice) <= 50 || Math.abs(event.price - maxPrice) <= 50) {
-      score += 10; // Close to preferred range
-    }
-
-    // Category/interest matching
-    const eventCategories = [event.category, ...event.tags].map(c => c.toLowerCase());
-    const userInterests = [...preferences.interests, ...preferences.eventTypes].map(i => i.toLowerCase());
-    const matchingInterests = eventCategories.filter(cat =>
-      userInterests.some(interest => cat.includes(interest) || interest.includes(cat))
-    );
-    score += Math.min(matchingInterests.length * 10, 30);
-
-    // Location preference (simplified - would need geolocation in real app)
-    if (preferences.location && event.location.toLowerCase().includes(preferences.location.toLowerCase())) {
-      score += 15;
-    }
-
-    return Math.min(Math.max(score, 0), 100);
+    return AIMatchingService.calculateEventScore(event, preferences);
   }, [preferences]);
 
   // Get event score for a specific event
@@ -184,32 +136,11 @@ export function useAIEventMatching({
     setError(null);
 
     try {
-      // In a real implementation, this would be an API call to your backend
-      // that uses AI/ML to recommend events based on user preferences and behavior
-
-      // For now, we'll filter and sort mock events based on preferences
-      let events = [...mockEvents];
+      // Load events from database or use fallback
+      let events = await getEventsData();
 
       if (preferences) {
-        // Filter by price range
-        events = events.filter(event =>
-          event.price >= preferences.priceRange[0] &&
-          event.price <= preferences.priceRange[1]
-        );
-
-        // Filter by interests/categories
-        if (preferences.interests.length > 0 || preferences.eventTypes.length > 0) {
-          const userInterests = [...preferences.interests, ...preferences.eventTypes].map(i => i.toLowerCase());
-          events = events.filter(event => {
-            const eventCategories = [event.category, ...event.tags].map(c => c.toLowerCase());
-            return eventCategories.some(cat =>
-              userInterests.some(interest => cat.includes(interest) || interest.includes(cat))
-            );
-          });
-        }
-
-        // Sort by calculated score
-        events.sort((a, b) => calculateEventScore(b) - calculateEventScore(a));
+        events = AIMatchingService.filterEventsByPreferences(events, preferences);
       }
 
       setRecommendedEvents(events);
@@ -226,13 +157,21 @@ export function useAIEventMatching({
     if (!enabled || !userId) return;
 
     try {
-      // In a real implementation, this would fetch from your database
-      // For now, we'll use localStorage to persist saved events
+      // Try to load from database first
+      const savedEventsList = await AIMatchingService.loadSavedEvents(userId);
+
+      if (savedEventsList.length > 0) {
+        setSavedEvents(savedEventsList);
+        return;
+      }
+
+      // Fallback to localStorage for offline functionality
       const saved = localStorage.getItem(`savedEvents_${userId}`);
       if (saved) {
         const savedEventIds = JSON.parse(saved);
-        const savedEventsList = mockEvents.filter(event => savedEventIds.includes(event.id));
-        setSavedEvents(savedEventsList);
+        const allEvents = await getEventsData();
+        const fallbackSavedEvents = allEvents.filter(event => savedEventIds.includes(event.id));
+        setSavedEvents(fallbackSavedEvents);
       }
     } catch (err) {
       console.error('Error loading saved events:', err);
@@ -318,24 +257,34 @@ export function useAIEventMatching({
     if (!userId) return;
 
     try {
-      // Save swipe history
+      // Track usage in database
+      await AIMatchingService.trackSwipe(userId);
+
+      // Save swipe history to localStorage for analytics
       const swipeHistory = localStorage.getItem(`swipeHistory_${userId}`);
       const swipes = swipeHistory ? JSON.parse(swipeHistory) : [];
       swipes.push({ eventId, action, timestamp: new Date().toISOString() });
       localStorage.setItem(`swipeHistory_${userId}`, JSON.stringify(swipes));
 
-      // If interested, add to saved events
+      // If interested, save to database and localStorage
       if (action === 'interested') {
-        const saved = localStorage.getItem(`savedEvents_${userId}`);
-        const savedEventIds = saved ? JSON.parse(saved) : [];
-        if (!savedEventIds.includes(eventId)) {
-          savedEventIds.push(eventId);
-          localStorage.setItem(`savedEvents_${userId}`, JSON.stringify(savedEventIds));
+        // Save to database
+        const success = await AIMatchingService.saveEvent(userId, eventId);
 
-          // Update saved events state
-          const event = mockEvents.find(e => e.id === eventId);
-          if (event) {
-            setSavedEvents(prev => [...prev, event]);
+        if (success) {
+          // Also save to localStorage as backup
+          const saved = localStorage.getItem(`savedEvents_${userId}`);
+          const savedEventIds = saved ? JSON.parse(saved) : [];
+          if (!savedEventIds.includes(eventId)) {
+            savedEventIds.push(eventId);
+            localStorage.setItem(`savedEvents_${userId}`, JSON.stringify(savedEventIds));
+
+            // Update saved events state
+            const allEvents = await getEventsData();
+            const event = allEvents.find(e => e.id === eventId);
+            if (event) {
+              setSavedEvents(prev => [...prev, event]);
+            }
           }
         }
       }
@@ -349,13 +298,21 @@ export function useAIEventMatching({
 
   // Update preferences
   const updatePreferences = useCallback(async (newPreferences: Partial<EventPreferences>) => {
-    // In a real implementation, this would save to your database
-    // For now, we'll just trigger a reload of recommended events
-    if (preferences) {
-      Object.assign(preferences, newPreferences);
+    if (!preferences || !userId) return;
+
+    try {
+      // Update local preferences object
+      const updatedPreferences = { ...preferences, ...newPreferences };
+
+      // Save to database
+      await AIMatchingService.saveUserPreferences(userId, updatedPreferences);
+
+      // Trigger reload of recommended events with new preferences
       loadRecommendedEvents();
+    } catch (error) {
+      console.error('Error updating preferences:', error);
     }
-  }, [preferences, loadRecommendedEvents]);
+  }, [preferences, userId, loadRecommendedEvents]);
 
   // Load data on mount and when dependencies change
   useEffect(() => {

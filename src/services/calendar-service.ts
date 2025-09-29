@@ -829,6 +829,107 @@ export class CalendarService {
     }
   }
 
+  /**
+   * Get calendar metrics for analytics
+   */
+  async getCalendarMetrics(userId: string): Promise<CalendarOperationResult<any>> {
+    try {
+      const now = new Date();
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+      const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Get all events for the user
+      const allEventsResult = await this.listEvents({
+        filter: {},
+        pagination: { limit: 1000, orderBy: 'start_time', orderDirection: 'asc' }
+      }, userId);
+
+      if (!allEventsResult.success || !allEventsResult.data) {
+        throw new Error('Failed to fetch events for metrics');
+      }
+
+      const events = allEventsResult.data.events;
+
+      // Calculate basic metrics
+      const totalEvents = events.length;
+      const upcomingEvents = events.filter(e => new Date(e.startTime) > now).length;
+      const conflictCount = events.filter(e => e.conflicts && e.conflicts.length > 0).length;
+      const overdueEvents = events.filter(e =>
+        new Date(e.startTime) < now && e.status !== 'completed' && e.status !== 'cancelled'
+      ).length;
+
+      const eventsThisWeek = events.filter(e => {
+        const eventDate = new Date(e.startTime);
+        return eventDate >= startOfWeek && eventDate <= endOfWeek;
+      }).length;
+
+      const eventsThisMonth = events.filter(e => {
+        const eventDate = new Date(e.startTime);
+        return eventDate >= startOfMonth && eventDate <= endOfMonth;
+      }).length;
+
+      // Calculate priority distribution
+      const eventsByPriority = {
+        urgent: events.filter(e => e.priority === 'urgent').length,
+        high: events.filter(e => e.priority === 'high').length,
+        normal: events.filter(e => e.priority === 'normal').length,
+        low: events.filter(e => e.priority === 'low').length
+      };
+
+      // Calculate status distribution
+      const eventsByStatus = {
+        confirmed: events.filter(e => e.status === 'confirmed').length,
+        tentative: events.filter(e => e.status === 'tentative').length,
+        cancelled: events.filter(e => e.status === 'cancelled').length,
+        draft: events.filter(e => e.status === 'draft').length
+      };
+
+      const metrics = {
+        totalEvents,
+        upcomingEvents,
+        conflictCount,
+        overdueEvents,
+        eventsThisWeek,
+        eventsThisMonth,
+        averageEventsPerDay: totalEvents > 0 ? Math.round((totalEvents / 30) * 10) / 10 : 0,
+        mostActiveDay: 'Monday', // Simplified - could calculate actual
+        eventsByPriority,
+        eventsByStatus,
+        eventsByType: {
+          meeting: events.filter(e => e.title.toLowerCase().includes('meeting')).length,
+          appointment: events.filter(e => e.title.toLowerCase().includes('appointment')).length,
+          reminder: events.filter(e => e.title.toLowerCase().includes('reminder')).length,
+          deadline: events.filter(e => e.title.toLowerCase().includes('deadline')).length,
+          other: events.filter(e => !['meeting', 'appointment', 'reminder', 'deadline'].some(type =>
+            e.title.toLowerCase().includes(type)
+          )).length
+        },
+        timeBlockAnalysis: {
+          busyHours: [], // Could implement hour-by-hour analysis
+          freeHours: [],
+          averageBusyHoursPerDay: 8
+        },
+        externalCalendarStats: {
+          totalSynced: 0, // Would need to query external sync records
+          lastSyncTime: null,
+          syncErrors: 0
+        }
+      };
+
+      return {
+        success: true,
+        data: metrics
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Error calculating calendar metrics: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
   private handleError(error: unknown, operation: string): CalendarOperationResult<any> {
     console.error(`Error ${operation}:`, error);
 

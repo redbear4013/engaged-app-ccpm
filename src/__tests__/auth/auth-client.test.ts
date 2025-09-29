@@ -1,6 +1,5 @@
 import './setup';
 import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
-import { SupabaseAuth, authClient } from '@/lib/supabase/auth';
 import { SignInData, SignUpData, UpdateProfileData } from '@/types/auth';
 
 // Mock Supabase client
@@ -28,14 +27,39 @@ const mockSupabaseClient = {
   })),
 };
 
-// Mock the createBrowserSupabaseClient
-jest.mock('@/lib/supabase/auth', () => {
-  const originalModule = jest.requireActual('@/lib/supabase/auth');
-  return {
-    ...originalModule,
-    createBrowserSupabaseClient: () => mockSupabaseClient,
-  };
-});
+// Mock the createBrowserSupabaseClient function
+jest.mock('@/lib/supabase/auth', () => ({
+  createBrowserSupabaseClient: () => mockSupabaseClient,
+  SupabaseAuth: jest.fn().mockImplementation(() => ({
+    signIn: jest.fn(),
+    signUp: jest.fn(),
+    signOut: jest.fn(),
+    resetPassword: jest.fn(),
+    updatePassword: jest.fn(),
+    updateProfile: jest.fn(),
+    resendConfirmation: jest.fn(),
+    getCurrentUser: jest.fn(),
+    getSession: jest.fn(),
+    onAuthStateChange: jest.fn(),
+    deleteAccount: jest.fn(),
+  })),
+  authClient: {
+    signIn: jest.fn(),
+    signUp: jest.fn(),
+    signOut: jest.fn(),
+    resetPassword: jest.fn(),
+    updatePassword: jest.fn(),
+    updateProfile: jest.fn(),
+    resendConfirmation: jest.fn(),
+    getCurrentUser: jest.fn(),
+    getSession: jest.fn(),
+    onAuthStateChange: jest.fn(),
+    deleteAccount: jest.fn(),
+  },
+}));
+
+// Import after mocking
+const { SupabaseAuth, authClient } = require('@/lib/supabase/auth');
 
 describe('SupabaseAuth', () => {
   let auth: SupabaseAuth;

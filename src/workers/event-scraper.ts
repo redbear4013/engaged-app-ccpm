@@ -5,19 +5,25 @@ import { SCRAPING_CONFIG } from '@/config/scraping'
 import type { ScrapeJobData, ScrapeJobResult } from '@/types/scraping'
 
 export class EventScraperWorker {
-  private queue: Bull.Queue<ScrapeJobData>
+  private queue: Bull.Queue<ScrapeJobData> | null = null
   private scrapingService: ScrapingService
   private isProcessing = false
 
   constructor() {
     this.scrapingService = new ScrapingService()
-    this.queue = new Bull('event-scraping', {
-      redis: SCRAPING_CONFIG.queue.redis,
-      defaultJobOptions: SCRAPING_CONFIG.queue.defaultJobOptions,
-    })
 
-    this.setupProcessors()
-    this.setupEventHandlers()
+    try {
+      this.queue = new Bull('event-scraping', {
+        redis: SCRAPING_CONFIG.queue.redis,
+        defaultJobOptions: SCRAPING_CONFIG.queue.defaultJobOptions,
+      })
+
+      this.setupProcessors()
+      this.setupEventHandlers()
+    } catch (error) {
+      console.warn('EventScraperWorker: Redis queue unavailable, running without queue:', error)
+      this.queue = null
+    }
   }
 
   async initialize(): Promise<void> {
@@ -31,6 +37,8 @@ export class EventScraperWorker {
   }
 
   private setupProcessors(): void {
+    if (!this.queue) return
+
     // Process individual source scraping jobs
     this.queue.process('scrape-source', SCRAPING_CONFIG.queue.concurrency, async (job) => {
       return this.processScrapeSourceJob(job)
@@ -48,6 +56,8 @@ export class EventScraperWorker {
   }
 
   private setupEventHandlers(): void {
+    if (!this.queue) return
+
     this.queue.on('ready', () => {
       console.log('Scraping queue is ready')
     })
@@ -195,7 +205,11 @@ export class EventScraperWorker {
       delay?: number
       attempts?: number
     } = {}
-  ): Promise<Bull.Job<ScrapeJobData>> {
+  ): Promise<Bull.Job<ScrapeJobData> | null> {
+    if (!this.queue) {
+      console.warn('EventScraperWorker: Queue unavailable, cannot add scrape source job')
+      return null
+    }
     const jobData: ScrapeJobData = {
       sourceId,
       sourceName,
@@ -220,7 +234,11 @@ export class EventScraperWorker {
   async addScrapeAllSourcesJob(options: {
     delay?: number
     priority?: number
-  } = {}): Promise<Bull.Job> {
+  } = {}): Promise<Bull.Job | null> {
+    if (!this.queue) {
+      console.warn('EventScraperWorker: Queue unavailable, cannot add scrape all sources job')
+      return null
+    }
     const jobOptions: Bull.JobOptions = {
       priority: options.priority || SCRAPING_CONFIG.scheduling.priorityLevels.normal,
       delay: options.delay,

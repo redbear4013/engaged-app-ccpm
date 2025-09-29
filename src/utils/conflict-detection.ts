@@ -679,8 +679,8 @@ function findBetterTimeSlot(
           const candidateMinute = candidateStart.getMinutes();
           const candidateTime = candidateHour * 60 + candidateMinute;
 
-          const [startHour, startMin] = constraints.workingHours.start.split(':').map(Number);
-          const [endHour, endMin] = constraints.workingHours.end.split(':').map(Number);
+          const [startHour = 9, startMin = 0] = constraints.workingHours.start.split(':').map(Number);
+          const [endHour = 17, endMin = 0] = constraints.workingHours.end.split(':').map(Number);
           const workStart = startHour * 60 + startMin;
           const workEnd = endHour * 60 + endMin;
 
@@ -690,7 +690,7 @@ function findBetterTimeSlot(
         }
 
         // Create candidate event for conflict checking
-        const candidateEvent = {
+        const candidateEvent: EnhancedCalendarEvent = {
           ...event,
           startTime: candidateStart,
           endTime: candidateEnd

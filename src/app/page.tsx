@@ -34,10 +34,16 @@ export default function Home() {
                 Welcome back, {user?.fullName || user?.email}!
               </p>
               <div className="flex justify-center gap-4">
-                <button className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700">
+                <button
+                  onClick={() => window.location.href = '/ai-match'}
+                  className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
+                >
                   Discover Events
                 </button>
-                <button className="rounded-lg border border-blue-600 bg-white px-6 py-3 text-blue-600 transition-colors hover:bg-blue-50">
+                <button
+                  onClick={() => window.location.href = '/calendar'}
+                  className="rounded-lg border border-blue-600 bg-white px-6 py-3 text-blue-600 transition-colors hover:bg-blue-50"
+                >
                   My Calendar
                 </button>
               </div>
@@ -48,10 +54,16 @@ export default function Home() {
                 Get started by creating an account or signing in.
               </p>
               <div className="flex justify-center gap-4">
-                <button className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700">
+                <button
+                  onClick={() => window.location.href = '/auth/signup'}
+                  className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
+                >
                   Sign Up
                 </button>
-                <button className="rounded-lg border border-blue-600 bg-white px-6 py-3 text-blue-600 transition-colors hover:bg-blue-50">
+                <button
+                  onClick={() => window.location.href = '/auth/signin'}
+                  className="rounded-lg border border-blue-600 bg-white px-6 py-3 text-blue-600 transition-colors hover:bg-blue-50"
+                >
                   Sign In
                 </button>
               </div>

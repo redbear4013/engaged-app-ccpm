@@ -18,7 +18,20 @@
     "db:setup": "node scripts/setup-database.js",
     "scraper:start": "node -r ts-node/register src/workers/start-scraper.ts",
     "scraper:dev": "nodemon -r ts-node/register src/workers/start-scraper.ts",
-    "scraper:health": "node -r ts-node/register src/workers/health-check.ts"
+    "scraper:health": "node -r ts-node/register src/workers/health-check.ts",
+
+    "performance:audit": "node scripts/performance-audit.js",
+    "performance:bundle": "node scripts/bundle-analyzer.js",
+    "performance:lighthouse": "npm run build && npm run start & sleep 10 && npm run performance:audit && kill %1",
+    "performance:analyze": "ANALYZE=true npm run build",
+    "performance:ci": "npm run build && npm run performance:bundle && npm run performance:lighthouse",
+
+    "build:production": "NODE_ENV=production npm run build",
+    "start:production": "NODE_ENV=production npm run start",
+    "deploy:check": "npm run type-check && npm run lint && npm run test && npm run build:production",
+
+    "optimize:images": "next-optimized-images",
+    "precommit": "npm run lint:fix && npm run format && npm run type-check"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

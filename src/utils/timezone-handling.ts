@@ -53,13 +53,16 @@ export function getTimezoneInfo(timezone: string, date: Date = new Date()): Time
     const julyOffset = getTimezoneOffset(timezone, july);
     const isDst = offset === Math.max(januaryOffset, julyOffset);
 
+    const dstStart = isDst ? getDSTTransitionDate(timezone, date.getFullYear(), 'start') : undefined;
+    const dstEnd = isDst ? getDSTTransitionDate(timezone, date.getFullYear(), 'end') : undefined;
+
     return {
       timezone,
       offset,
       abbreviation: timeZoneName,
       isDst,
-      dstStart: isDst ? getDSTTransitionDate(timezone, date.getFullYear(), 'start') : undefined,
-      dstEnd: isDst ? getDSTTransitionDate(timezone, date.getFullYear(), 'end') : undefined
+      ...(dstStart && { dstStart }),
+      ...(dstEnd && { dstEnd })
     };
   } catch (error) {
     console.error(`Error getting timezone info for ${timezone}:`, error);
@@ -361,7 +364,9 @@ export function getWorkingHoursInTimezone(
 
     // Format back to HH:MM
     const formatTime = (date: Date) => {
-      return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     };
 
     return {
