@@ -2,41 +2,65 @@
 
 // Service Worker registration and management
 export function registerServiceWorker() {
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
-      try {
-        const registration = await navigator.serviceWorker.register('/sw.js', {
-          scope: '/',
-        });
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return;
+  }
 
-        // Update service worker when a new version is available
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (!isProduction) {
+    // In development, make sure any previously registered workers are removed
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .catch((error) => console.warn('Failed to unregister service workers in development:', error));
+
+    if ('caches' in window) {
+      caches
+        .keys()
+        .then((cacheNames) => Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName))))
+        .catch((error) => console.warn('Failed to clear caches in development:', error));
+    }
+
+    return;
+  }
+
+  const globalScope = window as typeof window & { __engagedSwRegistered?: boolean };
+  if (globalScope.__engagedSwRegistered) {
+    return;
+  }
+  globalScope.__engagedSwRegistered = true;
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .then((registration) => {
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New service worker is available
-                console.log('New version available. Refresh to update.');
-
-                // Optionally show a notification to the user
-                if ('Notification' in window && Notification.permission === 'granted') {
-                  new Notification('App Update Available', {
-                    body: 'A new version of the app is available. Refresh to update.',
-                    icon: '/icon-192x192.png',
-                  });
-                }
-              }
-            });
+          if (!newWorker) {
+            return;
           }
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('New service worker available - refresh to update.');
+
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('App Update Available', {
+                  body: 'A new version of the app is available. Refresh to update.',
+                  icon: '/icon-192x192.png',
+                });
+              }
+            }
+          });
         });
 
-        console.log('Service Worker registered successfully');
-        return registration;
-      } catch (error) {
-        console.error('Service Worker registration failed:', error);
-      }
-    });
-  }
+        console.log('Service worker registered successfully.');
+      })
+      .catch((error) => {
+        console.error('Service worker registration failed:', error);
+      });
+  });
 }
 
 // Request permission for notifications

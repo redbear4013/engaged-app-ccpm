@@ -171,10 +171,10 @@ async function handleProtectedRoute(request: NextRequest): Promise<NextResponse>
     addSecurityHeaders(response, request);
     const supabase = createMiddlewareSupabaseClient(request, response);
 
-    // Get the current session
-    const { data: { session }, error } = await supabase.auth.getSession();
+    // Get the authenticated user (validated by Supabase)
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error || !session) {
+    if (error || !user) {
       // Redirect to signin with return URL
       const redirectUrl = new URL('/auth/signin', request.url);
       redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
@@ -182,19 +182,17 @@ async function handleProtectedRoute(request: NextRequest): Promise<NextResponse>
     }
 
     // Check if user profile exists for authenticated users
-    if (session.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', session.user.id)
-        .single();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
 
-      if (!profile) {
-        // Redirect to profile setup if profile doesn't exist
-        const redirectUrl = new URL('/onboarding/profile', request.url);
-        redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
-        return NextResponse.redirect(redirectUrl);
-      }
+    if (!profile) {
+      // Redirect to profile setup if profile doesn't exist
+      const redirectUrl = new URL('/onboarding/profile', request.url);
+      redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
     }
 
     return response;
@@ -214,10 +212,10 @@ async function handleAuthRoute(request: NextRequest): Promise<NextResponse> {
     addSecurityHeaders(response, request);
     const supabase = createMiddlewareSupabaseClient(request, response);
 
-    // Get the current session
-    const { data: { session } } = await supabase.auth.getSession();
+    // A verified user means the session is valid
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (session) {
+    if (user) {
       // User is authenticated, redirect to dashboard or return URL
       const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/dashboard';
       return NextResponse.redirect(new URL(redirectTo, request.url));

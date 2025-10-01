@@ -40,28 +40,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         setLoading(true);
+        const profile = await authClient.getCurrentUser();
 
-        // Get current session
-        const { data: { session }, error } = await authClient.getSession();
-
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            setUser(null);
-            setInitialized(true);
-            setLoading(false);
-          }
-          return;
-        }
-
-        // If session exists, get user profile
-        if (session?.user) {
-          const profile = await authClient.getCurrentUser();
-          if (mounted) {
-            setUser(profile);
-          }
-        } else if (mounted) {
-          setUser(null);
+        if (mounted) {
+          setUser(profile);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -86,16 +68,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Listen for auth state changes
   useEffect(() => {
     const { data: { subscription } } = authClient.onAuthStateChange(
-      async (event, session) => {
+      async (event) => {
+        let shouldResetLoading = false;
+
         try {
-          if (event === 'SIGNED_IN' && session?.user) {
-            setLoading(true);
-            const profile = await authClient.getCurrentUser();
-            setUser(profile);
-          } else if (event === 'SIGNED_OUT') {
+          if (event === 'SIGNED_OUT') {
             setUser(null);
-          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-            // Optionally refresh user profile on token refresh
+            return;
+          }
+
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+            shouldResetLoading = true;
+            setLoading(true);
             const profile = await authClient.getCurrentUser();
             setUser(profile);
           }
@@ -103,7 +87,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.error('Error handling auth state change:', error);
           setUser(null);
         } finally {
-          setLoading(false);
+          if (shouldResetLoading) {
+            setLoading(false);
+          }
         }
       }
     );

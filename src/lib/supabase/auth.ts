@@ -20,9 +20,31 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// Browser client for client-side operations
+type BrowserSupabaseClient = ReturnType<typeof createBrowserClient<Database>>;
+type UniversalSupabaseClient = ReturnType<typeof createClient<Database>>;
+
+const globalForSupabase = globalThis as typeof globalThis & {
+  __engagedBrowserSupabase?: BrowserSupabaseClient | UniversalSupabaseClient;
+};
+
+// Browser client for client-side operations (singleton)
 export function createBrowserSupabaseClient() {
-  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  if (!globalForSupabase.__engagedBrowserSupabase) {
+    const factory = typeof window === 'undefined' ? createClient : createBrowserClient;
+    globalForSupabase.__engagedBrowserSupabase = factory<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
+      }
+    );
+  }
+
+  return globalForSupabase.__engagedBrowserSupabase as BrowserSupabaseClient;
 }
 
 // Server client for server-side operations (App Router)
@@ -69,15 +91,6 @@ export function createMiddlewareSupabaseClient(
     },
   });
 }
-
-// Legacy client for backward compatibility
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-});
 
 // Auth utility functions
 export class SupabaseAuth {
