@@ -9,6 +9,7 @@ import {
   CalendarError
 } from '@/types/calendar';
 import { z } from 'zod';
+import { logApiRequest, logAuthFailure, logValidationError, logSuccess, logApiError } from '@/lib/api-logger';
 
 // Validation schemas
 const createEventSchema = z.object({
@@ -73,38 +74,24 @@ const listEventsSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    // Add comprehensive request logging
-    console.log('GET /api/calendar/events request:', {
-      url: request.url,
-      method: request.method,
-      headers: {
-        authorization: request.headers.get('authorization') ? 'present' : 'missing',
-        contentType: request.headers.get('content-type')
-      }
-    });
+    logApiRequest(request);
 
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('Calendar API authentication failed:', {
-        error: authError,
-        message: authError?.message,
-        user: user ? 'present' : 'null'
-      });
+      logAuthFailure(authError, { user: user ? 'present' : 'null' });
       return NextResponse.json(
         { error: 'Authentication required', details: authError?.message },
         { status: 401 }
       );
     }
 
-    console.log('Authenticated user:', { userId: user.id, email: user.email });
+    logSuccess('User authenticated', undefined, { userId: user.id, email: user.email });
 
     // Parse and validate query parameters
     const { searchParams } = new URL(request.url);
     const queryParams: any = Object.fromEntries(searchParams);
-
-    console.log('Raw query params:', queryParams);
 
     // Convert arrays from comma-separated strings
     ['status', 'priority', 'visibility'].forEach(key => {
@@ -128,14 +115,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('Processed query params:', queryParams);
-
     const validationResult = listEventsSchema.safeParse(queryParams);
     if (!validationResult.success) {
-      console.error('Query parameter validation failed:', {
-        errors: validationResult.error.errors,
-        queryParams
-      });
+      logValidationError(validationResult.error.errors, { queryParams });
       return NextResponse.json(
         {
           error: 'Invalid query parameters',
@@ -144,8 +126,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log('Validation passed:', validationResult.data);
 
     const requestData: CalendarEventsListRequest = {
       ...validationResult.data,
@@ -186,7 +166,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('GET /api/calendar/events error:', error);
+    logApiError(error, 'GET /api/calendar/events');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
