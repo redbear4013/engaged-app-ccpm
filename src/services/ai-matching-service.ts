@@ -168,13 +168,19 @@ export class AIMatchingService {
         });
 
       if (error) {
-        console.error('Error saving event:', error);
+        console.error('Error saving event to database:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error saving event:', error);
+      console.error('Exception while saving event:', error);
       return false;
     }
   }
