@@ -155,6 +155,29 @@ export class AIMatchingService {
    */
   static async saveEvent(userId: string, eventId: string): Promise<boolean> {
     try {
+      // Validate inputs
+      if (!userId || !eventId) {
+        console.error('Invalid userId or eventId:', { userId, eventId });
+        return false;
+      }
+
+      // First verify the event exists to provide better error messages
+      const { data: eventExists, error: checkError } = await supabase
+        .from('events')
+        .select('id')
+        .eq('id', eventId)
+        .single();
+
+      if (checkError || !eventExists) {
+        console.error('Event does not exist:', {
+          eventId,
+          error: checkError,
+          message: checkError?.message
+        });
+        return false;
+      }
+
+      // Attempt to save the user event
       const { error } = await supabase
         .from('user_events')
         .upsert({
@@ -173,11 +196,14 @@ export class AIMatchingService {
           message: error.message,
           details: error.details,
           hint: error.hint,
-          code: error.code
+          code: error.code,
+          userId,
+          eventId
         });
         return false;
       }
 
+      console.log('Successfully saved event:', { userId, eventId });
       return true;
     } catch (error) {
       console.error('Exception while saving event:', error);

@@ -286,6 +286,23 @@ export function useAIEventMatching({
               setSavedEvents(prev => [...prev, event]);
             }
           }
+        } else {
+          // Database save failed, but still save to localStorage as fallback
+          console.warn('Failed to save event to database, using localStorage fallback');
+          const saved = localStorage.getItem(`savedEvents_${userId}`);
+          const savedEventIds = saved ? JSON.parse(saved) : [];
+          if (!savedEventIds.includes(eventId)) {
+            savedEventIds.push(eventId);
+            localStorage.setItem(`savedEvents_${userId}`, JSON.stringify(savedEventIds));
+
+            // Update saved events state
+            const allEvents = await getEventsData();
+            const event = allEvents.find(e => e.id === eventId);
+            if (event) {
+              setSavedEvents(prev => [...prev, event]);
+            }
+          }
+          setError('Failed to save event to database. Event saved locally.');
         }
       }
 
