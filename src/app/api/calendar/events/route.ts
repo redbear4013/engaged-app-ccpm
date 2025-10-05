@@ -73,41 +73,69 @@ const listEventsSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add comprehensive request logging
+    console.log('GET /api/calendar/events request:', {
+      url: request.url,
+      method: request.method,
+      headers: {
+        authorization: request.headers.get('authorization') ? 'present' : 'missing',
+        contentType: request.headers.get('content-type')
+      }
+    });
+
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('Calendar API authentication failed:', {
+        error: authError,
+        message: authError?.message,
+        user: user ? 'present' : 'null'
+      });
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: 'Authentication required', details: authError?.message },
         { status: 401 }
       );
     }
 
+    console.log('Authenticated user:', { userId: user.id, email: user.email });
+
     // Parse and validate query parameters
     const { searchParams } = new URL(request.url);
-    const queryParams = Object.fromEntries(searchParams);
+    const queryParams: any = Object.fromEntries(searchParams);
+
+    console.log('Raw query params:', queryParams);
 
     // Convert arrays from comma-separated strings
     ['status', 'priority', 'visibility'].forEach(key => {
-      if (queryParams[key]) {
+      if (queryParams[key] && typeof queryParams[key] === 'string') {
         queryParams[key] = queryParams[key].split(',');
       }
     });
 
     // Convert booleans
     ['hasConflicts', 'isRecurring', 'includeConflicts', 'includeDeleted'].forEach(key => {
-      if (queryParams[key]) {
-        queryParams[key] = queryParams[key] === 'true';
+      if (queryParams[key] !== undefined) {
+        queryParams[key] = queryParams[key] === 'true' || queryParams[key] === true;
       }
     });
 
     // Convert numbers
     if (queryParams.limit) {
-      queryParams.limit = parseInt(queryParams.limit);
+      queryParams.limit = parseInt(queryParams.limit, 10);
+      if (isNaN(queryParams.limit)) {
+        delete queryParams.limit;
+      }
     }
+
+    console.log('Processed query params:', queryParams);
 
     const validationResult = listEventsSchema.safeParse(queryParams);
     if (!validationResult.success) {
+      console.error('Query parameter validation failed:', {
+        errors: validationResult.error.errors,
+        queryParams
+      });
       return NextResponse.json(
         {
           error: 'Invalid query parameters',
@@ -116,6 +144,8 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log('Validation passed:', validationResult.data);
 
     const requestData: CalendarEventsListRequest = {
       ...validationResult.data,
