@@ -1,6 +1,7 @@
 import Fuse from 'fuse.js'
 import levenshtein from 'fast-levenshtein'
 import { createHash } from 'node:crypto'
+import * as chrono from 'chrono-node'
 import type {
   RawEventData,
   EventDeduplicationMatch,
@@ -156,13 +157,43 @@ export function isExactDuplicate(
  * Normalize event data for better matching
  */
 export function normalizeEventData(event: RawEventData): RawEventData {
+  // Safely parse dates using both native Date and chrono for natural language
+  let normalizedStartTime = event.startTime
+  let normalizedEndTime = event.endTime
+
+  if (event.startTime) {
+    // First try native Date parsing
+    let startDate = new Date(event.startTime)
+
+    // If that fails, try natural language parsing with chrono
+    if (isNaN(startDate.getTime())) {
+      const parsed = chrono.parseDate(event.startTime)
+      startDate = parsed || startDate
+    }
+
+    normalizedStartTime = isNaN(startDate.getTime()) ? undefined : startDate.toISOString()
+  }
+
+  if (event.endTime) {
+    // First try native Date parsing
+    let endDate = new Date(event.endTime)
+
+    // If that fails, try natural language parsing with chrono
+    if (isNaN(endDate.getTime())) {
+      const parsed = chrono.parseDate(event.endTime)
+      endDate = parsed || endDate
+    }
+
+    normalizedEndTime = isNaN(endDate.getTime()) ? undefined : endDate.toISOString()
+  }
+
   return {
     ...event,
     title: event.title.trim().replace(/\s+/g, ' '),
     description: event.description?.trim().replace(/\s+/g, ' '),
     location: event.location?.trim().replace(/\s+/g, ' '),
-    startTime: event.startTime ? new Date(event.startTime).toISOString() : event.startTime,
-    endTime: event.endTime ? new Date(event.endTime).toISOString() : event.endTime,
+    startTime: normalizedStartTime,
+    endTime: normalizedEndTime,
   }
 }
 

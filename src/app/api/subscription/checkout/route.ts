@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { SubscriptionService } from '@/services/subscription-service';
 
 export async function POST(request: NextRequest) {
@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user exists and is authenticated
+    const supabase = await createServerSupabaseClient();
     const { data: user } = await supabase
       .from('profiles')
       .select('id, email')

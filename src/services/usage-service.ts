@@ -1,4 +1,6 @@
-import { supabase } from '@/lib/supabase';
+import { createBrowserSupabaseClient } from '@/lib/supabase/auth';
+
+const supabase = createBrowserSupabaseClient();
 import { getDailySwipeLimit } from '@/lib/stripe';
 import { UserUsage, UsageLimits } from '@/types';
 

@@ -113,21 +113,29 @@ export class ScrapingScheduler {
         return
       }
 
-      // Add scraping jobs for each source
-      const jobPromises = sourcesDue.map(source => {
-        const priority = this.calculateSourcePriority(source)
-        return eventScraperWorker.addScrapeSourceJob(
-          source.id,
-          source.name,
-          { priority }
-        )
-      })
 
-      const jobs = await Promise.all(jobPromises)
-      console.log(`Added ${jobs.length} scraping jobs to queue`)
-
-      // Update metrics
-      await this.updateSchedulingMetrics(sourcesDue.length, jobs.length)
+      // Check if running in queue mode or direct mode
+      if (eventScraperWorker.isQueueMode()) {
+        // Queue mode - add jobs to Bull queue
+        const jobPromises = sourcesDue.map(source => {
+          const priority = this.calculateSourcePriority(source)
+          return eventScraperWorker.addScrapeSourceJob(source.id, source.name, { priority })
+        })
+        const jobs = await Promise.all(jobPromises)
+        console.log(`Added ${jobs.length} scraping jobs to queue`)
+        await this.updateSchedulingMetrics(sourcesDue.length, jobs.length)
+      } else {
+        // Direct mode - scrape immediately without queue
+        console.log('⚡ Running in DIRECT MODE - scraping sources now...')
+        const results = []
+        for (const source of sourcesDue) {
+          const result = await eventScraperWorker.scrapeSourceDirect(source.id, source.name)
+          if (result) results.push(result)
+        }
+        const successCount = results.filter(r => r.status === 'completed').length
+        console.log(`✅ Completed ${successCount}/${sourcesDue.length} direct scrapes`)
+        await this.updateSchedulingMetrics(sourcesDue.length, results.length)
+      }
 
     } catch (error) {
       console.error('Error in scheduled scraping:', error)
@@ -280,7 +288,7 @@ export class ScrapingScheduler {
     const status: Record<string, boolean> = {}
 
     for (const [name, task] of this.scheduledTasks) {
-      status[name] = task.getStatus() === 'scheduled'
+      status[name] = this.isRunning
     }
 
     return status

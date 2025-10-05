@@ -55,7 +55,7 @@ export function useCalendarEvents(params: UseCalendarEventsParams = {}): Calenda
       }
 
       const data = await response.json();
-      return data.events || [];
+      return data.data?.events || [];
     },
     enabled: enabled && !!userId,
     staleTime: 30000, // 30 seconds

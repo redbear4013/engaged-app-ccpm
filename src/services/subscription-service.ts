@@ -1,5 +1,7 @@
 import { stripe, SUBSCRIPTION_PLANS } from '@/lib/stripe';
-import { supabase } from '@/lib/supabase';
+import { createBrowserSupabaseClient } from '@/lib/supabase/auth';
+
+const supabase = createBrowserSupabaseClient();
 import { Subscription, Payment, UserUsage } from '@/types';
 import Stripe from 'stripe';
 

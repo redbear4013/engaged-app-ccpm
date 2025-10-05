@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
     // Get total events count
+    const supabase = await createServerSupabaseClient();
     const { count: totalEvents, error: eventsError } = await supabase
       .from('events')
       .select('*', { count: 'exact', head: true })

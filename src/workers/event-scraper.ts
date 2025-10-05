@@ -12,20 +12,11 @@ export class EventScraperWorker {
   constructor() {
     this.scrapingService = new ScrapingService()
 
-    try {
-      this.queue = new Bull('event-scraping', {
-        redis: SCRAPING_CONFIG.queue.redis,
-        defaultJobOptions: SCRAPING_CONFIG.queue.defaultJobOptions,
-      })
-
-      this.setupProcessors()
-      this.setupEventHandlers()
-    } catch (error) {
-      console.warn('EventScraperWorker: Redis queue unavailable, running without queue:', error)
-      this.queue = null
-    }
+    // Skip Bull queue - Redis not available
+    // To enable queue: sudo apt-get install redis-server && sudo service redis-server start
+    console.warn('⚠️  Running scraper in DIRECT MODE (no Redis queue)')
+    this.queue = null
   }
-
   async initialize(): Promise<void> {
     try {
       await this.scrapingService.initialize()
@@ -268,6 +259,9 @@ export class EventScraperWorker {
     delayed: number
     paused: number
   }> {
+    if (!this.queue) {
+      return { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0, paused: 0 }
+    }
     const [waiting, active, completed, failed, delayed, paused] = await Promise.all([
       this.queue.getWaiting(),
       this.queue.getActive(),
@@ -343,7 +337,30 @@ export class EventScraperWorker {
     }
   }
 
-  getQueue(): Bull.Queue<ScrapeJobData> {
+  // Direct scraping method for no-queue mode
+  async scrapeSourceDirect(sourceId: string, sourceName: string): Promise<ScrapeJobResult | null> {
+    if (this.queue) {
+      console.warn('Queue exists, use addScrapeSourceJob instead')
+      return null
+    }
+
+    console.log(`🔄 Direct scraping: ${sourceName} (${sourceId})`)
+    
+    try {
+      const result = await this.scrapingService.scrapeSource(sourceId)
+      console.log(`✅ Direct scrape completed: ${sourceName} - Found: ${result.eventsFound}, Created: ${result.eventsCreated}`)
+      return result
+    } catch (error) {
+      console.error(`❌ Direct scrape failed: ${sourceName}`, error)
+      return null
+    }
+  }
+
+  isQueueMode(): boolean {
+    return this.queue !== null
+  }
+
+  getQueue(): Bull.Queue<ScrapeJobData> | null {
     return this.queue
   }
 }

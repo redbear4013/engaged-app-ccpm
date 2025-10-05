@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { createBrowserSupabaseClient } from '@/lib/supabase/auth';
+
+const supabase = createBrowserSupabaseClient();
 import { Event, EventFilters, PaginatedResponse } from '@/types';
 
 const EVENTS_QUERY_KEY = 'events';

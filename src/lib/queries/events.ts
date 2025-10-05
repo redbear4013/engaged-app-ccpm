@@ -1,4 +1,6 @@
-import { supabase } from '@/lib/supabase';
+import { createBrowserSupabaseClient } from '@/lib/supabase/auth';
+
+const supabase = createBrowserSupabaseClient();
 import { Event } from '@/types';
 
 export interface DiscoveryParams {

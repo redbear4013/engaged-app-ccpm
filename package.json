@@ -16,20 +16,17 @@
     "type-check": "tsc --noEmit",
     "prepare": "husky install || true",
     "db:setup": "node scripts/setup-database.js",
-    "scraper:start": "node -r ts-node/register src/workers/start-scraper.ts",
-    "scraper:dev": "nodemon -r ts-node/register src/workers/start-scraper.ts",
-    "scraper:health": "node -r ts-node/register src/workers/health-check.ts",
-
+    "scraper:start": "dotenv -e .env.local -- node -r ts-node/register --project tsconfig.node.json src/workers/start-scraper.ts",
+    "scraper:dev": "dotenv -e .env.local -- nodemon --exec 'ts-node --project tsconfig.node.json' src/workers/start-scraper.ts",
+    "scraper:health": "dotenv -e .env.local -- node -r ts-node/register --project tsconfig.node.json src/workers/health-check.ts",
     "performance:audit": "node scripts/performance-audit.js",
     "performance:bundle": "node scripts/bundle-analyzer.js",
     "performance:lighthouse": "npm run build && npm run start & sleep 10 && npm run performance:audit && kill %1",
     "performance:analyze": "ANALYZE=true npm run build",
     "performance:ci": "npm run build && npm run performance:bundle && npm run performance:lighthouse",
-
     "build:production": "NODE_ENV=production npm run build",
     "start:production": "NODE_ENV=production npm run start",
     "deploy:check": "npm run type-check && npm run lint && npm run test && npm run build:production",
-
     "optimize:images": "next-optimized-images",
     "precommit": "npm run lint:fix && npm run format && npm run type-check"
   },
@@ -48,6 +45,7 @@
     "@types/react-big-calendar": "^1.16.3",
     "bull": "^4.16.3",
     "cheerio": "^1.0.0",
+    "chrono-node": "^2.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -87,6 +85,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "chrome-launcher": "^1.2.1",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "jest": "^30.1.3",
@@ -97,6 +96,7 @@
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "tw-animate-css": "^1.3.8",
     "typescript": "^5"
   }
