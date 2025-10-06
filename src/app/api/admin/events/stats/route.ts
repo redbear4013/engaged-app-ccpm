@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { logApiRequest, logDatabaseError, logApiError, logSuccess } from '@/lib/api-logger'
 
 export async function GET(request: NextRequest) {
   try {
+    logApiRequest(request, { endpoint: '/api/admin/events/stats' });
+
     // Get total events count
     const supabase = await createServerSupabaseClient();
     const { count: totalEvents, error: eventsError } = await supabase
@@ -11,6 +14,7 @@ export async function GET(request: NextRequest) {
       .neq('event_type', 'invalid')
 
     if (eventsError) {
+      logDatabaseError(eventsError, 'Get total events count');
       throw eventsError
     }
 
@@ -26,6 +30,7 @@ export async function GET(request: NextRequest) {
       .neq('event_type', 'invalid')
 
     if (sourceError) {
+      logDatabaseError(sourceError, 'Get events by source');
       throw sourceError
     }
 
@@ -51,6 +56,7 @@ export async function GET(request: NextRequest) {
       .limit(10)
 
     if (recentError) {
+      logDatabaseError(recentError, 'Get recent events');
       throw recentError
     }
 
@@ -65,9 +71,11 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString()
     }
 
+    logSuccess('Get event statistics', { totalEvents, sourceCount: Object.keys(sourceCounts).length });
+
     return NextResponse.json(stats)
   } catch (error) {
-    console.error('Error getting event stats:', error)
+    logApiError(error, 'GET /api/admin/events/stats');
     return NextResponse.json(
       {
         error: 'Failed to get event statistics',
