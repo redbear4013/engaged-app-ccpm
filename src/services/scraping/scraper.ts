@@ -1,6 +1,7 @@
 import { chromium, type Browser, type Page, type BrowserContext } from 'playwright'
 import type { ScrapingConfig, RawEventData } from '@/types/scraping'
 import { SCRAPING_CONFIG } from '@/config/scraping'
+import { validateEvents, logValidationStats } from './event-validator'
 
 export class EventScraper {
   private browser: Browser | null = null
@@ -108,8 +109,17 @@ export class EventScraper {
         }
       } while (currentPage <= maxPages)
 
-      console.log(`Scraped ${events.length} events from ${url}`)
-      return events
+      console.log(`Scraped ${events.length} raw events from ${url}`)
+
+      // Validate and filter events
+      const validationResults = validateEvents(events)
+      logValidationStats(validationResults)
+
+      // Return only valid events (both events and attractions)
+      const validEvents = [...validationResults.valid, ...validationResults.attractions]
+      console.log(`Returning ${validEvents.length} valid events after validation`)
+
+      return validEvents
 
     } catch (error) {
       console.error(`Error scraping events from ${url}:`, error)
