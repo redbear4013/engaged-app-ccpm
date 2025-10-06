@@ -18,6 +18,11 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "jest.config.js",
+      "scripts/**/*.js",
+      "claudedocs/**/*.js",
+      "execute-sql.js",
+      "execute-sql-simple.js",
     ],
   },
 ];
