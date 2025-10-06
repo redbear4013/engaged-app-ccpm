@@ -65,6 +65,7 @@ export class AIMatchingService {
           venues(name, address, city)
         `)
         .eq('status', 'published')
+        .neq('event_type', 'invalid')
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
         .limit(limit);
@@ -166,6 +167,7 @@ export class AIMatchingService {
         .from('events')
         .select('id')
         .eq('id', eventId)
+        .neq('event_type', 'invalid')
         .single();
 
       if (checkError || !eventExists) {

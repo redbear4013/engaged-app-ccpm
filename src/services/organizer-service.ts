@@ -342,7 +342,8 @@ export class OrganizerService {
             city
           )
         `, { count: 'exact' })
-        .eq('organizer_id', organizerId);
+        .eq('organizer_id', organizerId)
+        .neq('event_type', 'invalid');
 
       // Apply filters
       if (filters.status && filters.status.length > 0) {
@@ -505,6 +506,7 @@ export class OrganizerService {
         .select('id, title, status, created_at, published_at')
         .eq('id', eventId)
         .eq('organizer_id', organizerId)
+        .neq('event_type', 'invalid')
         .single();
 
       if (eventError || !eventData) {
@@ -562,7 +564,8 @@ export class OrganizerService {
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('status, created_at, popularity_score')
-        .eq('organizer_id', organizerId);
+        .eq('organizer_id', organizerId)
+        .neq('event_type', 'invalid');
 
       if (eventsError) throw eventsError;
 
@@ -639,6 +642,7 @@ export class OrganizerService {
       const { data, error } = await supabase
         .from('events')
         .select('id, title, start_time, custom_location, venues(name)')
+        .neq('event_type', 'invalid')
         .or(`title.ilike.%${eventData.title}%,custom_location.ilike.%${eventData.customLocation}%`)
         .gte('start_time', new Date(eventData.startTime.getTime() - 24 * 60 * 60 * 1000).toISOString())
         .lte('start_time', new Date(eventData.startTime.getTime() + 24 * 60 * 60 * 1000).toISOString())

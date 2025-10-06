@@ -45,6 +45,7 @@ export function useEvents(params: FetchEventsParams = {}) {
           )
         `, { count: 'exact' })
         .eq('status', 'published')
+        .neq('event_type', 'invalid')
         .range((page - 1) * limit, page * limit - 1)
         .order('start_time', { ascending: true });
 

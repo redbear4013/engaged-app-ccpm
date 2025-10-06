@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     const { count: totalEvents, error: eventsError } = await supabase
       .from('events')
       .select('*', { count: 'exact', head: true })
+      .neq('event_type', 'invalid')
 
     if (eventsError) {
       throw eventsError
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
           name
         )
       `)
+      .neq('event_type', 'invalid')
 
     if (sourceError) {
       throw sourceError
@@ -44,6 +46,7 @@ export async function GET(request: NextRequest) {
           name
         )
       `)
+      .neq('event_type', 'invalid')
       .order('created_at', { ascending: false })
       .limit(10)
 

@@ -45,6 +45,7 @@ export async function getTrendingEvents(params: DiscoveryParams = {}) {
       )
     `)
     .eq('status', 'published')
+    .neq('event_type', 'invalid')
     .eq('is_trending', true)
     .gte('start_time', new Date().toISOString())
     .order('popularity_score', { ascending: false })
@@ -106,6 +107,7 @@ export async function getNearbyEvents(params: DiscoveryParams) {
         )
       `)
       .eq('status', 'published')
+      .neq('event_type', 'invalid')
       .gte('start_time', new Date().toISOString())
       .order('start_time', { ascending: true })
       .limit(limit);
@@ -153,6 +155,7 @@ export async function getTopEvents(params: DiscoveryParams = {}) {
       )
     `)
     .eq('status', 'published')
+    .neq('event_type', 'invalid')
     .eq('is_featured', true)
     .gte('start_time', new Date().toISOString())
     .order('quality_score', { ascending: false })
@@ -221,6 +224,7 @@ export async function searchEvents(
       )
     `, { count: 'exact' })
     .eq('status', 'published')
+    .neq('event_type', 'invalid')
     .gte('start_time', new Date().toISOString());
 
   // Text search
