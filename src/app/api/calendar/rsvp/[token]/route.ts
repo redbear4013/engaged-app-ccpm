@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { InvitationService, RSVPResponse } from '@/services/invitation-service';
 import { RSVPStatus } from '@/types/calendar';
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/calendar/rsvp/[token] - Get invitation details by token (public)
  */

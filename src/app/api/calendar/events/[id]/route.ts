@@ -8,6 +8,8 @@ import {
 } from '@/types/calendar';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic'
+
 // Validation schema for updates
 const updateEventSchema = z.object({
   title: z.string().min(1).max(200).optional(),

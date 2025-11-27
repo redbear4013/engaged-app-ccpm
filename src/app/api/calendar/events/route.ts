@@ -11,6 +11,8 @@ import {
 import { z } from 'zod';
 import { logApiRequest, logAuthFailure, logValidationError, logSuccess, logApiError } from '@/lib/api-logger';
 
+export const dynamic = 'force-dynamic'
+
 // Validation schemas
 const createEventSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),

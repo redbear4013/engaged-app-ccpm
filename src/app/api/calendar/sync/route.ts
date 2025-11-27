@@ -11,6 +11,8 @@ import {
 } from '@/types/calendar';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic'
+
 // Validation schemas
 const syncRequestSchema = z.object({
   provider: z.enum(['google', 'outlook', 'apple', 'ical']),

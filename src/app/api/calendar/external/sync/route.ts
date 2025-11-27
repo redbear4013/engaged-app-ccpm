@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { ExternalCalendarSyncService } from '@/services/external-calendar/sync-service';
 import { ExternalCalendarSyncConfig } from '@/types/calendar';
 
+export const dynamic = 'force-dynamic'
+
 /**
  * POST /api/calendar/external/sync - Trigger manual sync for external calendar
  */

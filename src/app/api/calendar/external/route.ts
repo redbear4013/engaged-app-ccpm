@@ -7,6 +7,8 @@ import {
   ExternalCalendarSyncConfig
 } from '@/types/calendar';
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/calendar/external - Get user's external calendar sync configs
  */

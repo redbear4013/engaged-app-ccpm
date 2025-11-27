@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { InvitationService, InvitationData } from '@/services/invitation-service';
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/calendar/invitations - Get invitations for user
  */
