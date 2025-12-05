@@ -1,7 +1,7 @@
 import { createBrowserSupabaseClient } from '@/lib/supabase/auth';
 
 const supabase = createBrowserSupabaseClient();
-import { getDailySwipeLimit } from '@/lib/stripe';
+import { getDailySwipeLimit } from '@/lib/subscription-config';
 import { UserUsage, UsageLimits } from '@/types';
 
 export class UsageService {

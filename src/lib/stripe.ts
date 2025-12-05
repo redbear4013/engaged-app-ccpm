@@ -1,10 +1,30 @@
 import Stripe from 'stripe';
 import { loadStripe } from '@stripe/stripe-js';
 
-// Server-side Stripe instance
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-  typescript: true,
+// Re-export subscription config (no Stripe initialization)
+export * from './subscription-config';
+
+// Lazy initialization of server-side Stripe instance
+let stripeInstance: Stripe | null = null;
+
+export function getServerStripe(): Stripe {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2024-12-18.acacia',
+      typescript: true,
+    });
+  }
+  return stripeInstance;
+}
+
+// For backward compatibility (deprecated - use getServerStripe() instead)
+export const stripe = new Proxy({} as Stripe, {
+  get(target, prop) {
+    return getServerStripe()[prop as keyof Stripe];
+  }
 });
 
 // Client-side Stripe instance
@@ -16,79 +36,3 @@ export const getStripe = () => {
   }
   return stripePromise;
 };
-
-// Subscription plan configuration
-export const SUBSCRIPTION_PLANS = {
-  FREE: {
-    id: 'free',
-    name: 'Free',
-    stripePriceId: null,
-    amount: 0,
-    currency: 'HKD',
-    interval: 'month' as const,
-    features: [
-      '40 swipes per day',
-      'Basic event discovery',
-      'Calendar integration',
-      'Save events',
-    ],
-    limits: {
-      dailySwipes: 40,
-      superlikes: 0,
-      advancedFilters: false,
-      earlyAccess: false,
-      prioritySupport: false,
-    },
-  },
-  PRO: {
-    id: 'pro',
-    name: 'Pro',
-    stripePriceId: process.env.STRIPE_PRO_PRICE_ID!,
-    amount: 3800, // HKD 38.00 in cents
-    currency: 'HKD',
-    interval: 'month' as const,
-    features: [
-      'Unlimited swipes',
-      'Super likes',
-      'Advanced filters',
-      'Early access to events',
-      'Priority support',
-      'Detailed analytics',
-    ],
-    limits: {
-      dailySwipes: -1, // Unlimited
-      superlikes: 5,
-      advancedFilters: true,
-      earlyAccess: true,
-      prioritySupport: true,
-    },
-  },
-} as const;
-
-// Helper to get plan by ID
-export function getSubscriptionPlan(planId: string) {
-  switch (planId) {
-    case 'free':
-      return SUBSCRIPTION_PLANS.FREE;
-    case 'pro':
-      return SUBSCRIPTION_PLANS.PRO;
-    default:
-      return SUBSCRIPTION_PLANS.FREE;
-  }
-}
-
-// Helper to check if user has specific feature
-export function hasFeature(
-  isPro: boolean,
-  feature: keyof typeof SUBSCRIPTION_PLANS.PRO.limits
-): boolean {
-  if (!isPro) {
-    return SUBSCRIPTION_PLANS.FREE.limits[feature] as boolean;
-  }
-  return SUBSCRIPTION_PLANS.PRO.limits[feature] as boolean;
-}
-
-// Helper to get daily swipe limit
-export function getDailySwipeLimit(isPro: boolean): number {
-  return isPro ? SUBSCRIPTION_PLANS.PRO.limits.dailySwipes : SUBSCRIPTION_PLANS.FREE.limits.dailySwipes;
-}

@@ -3,7 +3,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription, useCreateCheckoutSession } from '@/hooks/use-subscription';
 import { PricingCard } from './PricingCard';
-import { SUBSCRIPTION_PLANS } from '@/lib/stripe';
+import { SUBSCRIPTION_PLANS } from '@/lib/subscription-config';
 import { SubscriptionPlan } from '@/types';
 
 export function PricingPage() {
